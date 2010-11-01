@@ -4,12 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	_ "goprotobuf.googlecode.com/hg/compiler/descriptor"
+	_ "goprotobuf.googlecode.com/hg/compiler/plugin"
 )
 
 var (
 	// Flags
 	helpShort = flag.Bool("h", false, "Show usage text (same as --help).")
 	helpLong = flag.Bool("help", false, "Show usage text (same as -h).")
+
+	pluginBinary = flag.String("plugin", "protoc-gen-go", "The code generator plugin to use.")
 )
 
 func main() {
