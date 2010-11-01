@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"goprotobuf.googlecode.com/hg/proto"
 )
 
 var (
@@ -28,7 +30,9 @@ func main() {
 	}
 
 	// TODO: run plugin
-	fmt.Printf("-----\n%+v\n-----\n", fds)
+	fmt.Println("-----")
+	proto.MarshalText(os.Stdout, fds)
+	fmt.Println("-----")
 }
 
 func usage() {

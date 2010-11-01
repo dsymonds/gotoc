@@ -5,6 +5,7 @@ import (
 	"os"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
+	"goprotobuf.googlecode.com/hg/proto"
 )
 
 func ParseFiles(filenames []string) (*FileDescriptorSet, os.Error) {
@@ -13,11 +14,8 @@ func ParseFiles(filenames []string) (*FileDescriptorSet, os.Error) {
 	}
 
 	for i, filename := range filenames {
-		buf, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, err
-		}
-		fds.File[i], err = parseFile(buf)
+		var err os.Error
+		fds.File[i], err = parseFile(filename)
 		if err != nil {
 			return nil, err
 		}
@@ -26,7 +24,17 @@ func ParseFiles(filenames []string) (*FileDescriptorSet, os.Error) {
 	return fds, nil
 }
 
-func parseFile(buf []byte) (*FileDescriptorProto, os.Error) {
+func parseFile(filename string) (*FileDescriptorProto, os.Error) {
+	fd := &FileDescriptorProto{
+		Name: proto.String(filename),
+	}
+
+	buf, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO
-	return nil, nil
+	_ = buf
+	return fd, nil
 }
