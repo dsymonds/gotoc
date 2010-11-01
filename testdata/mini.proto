@@ -1,3 +1,5 @@
+// This is a test package.
+// As you can see, comments will be ignored.
 package foo;
 
 message Bar {

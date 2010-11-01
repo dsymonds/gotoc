@@ -165,6 +165,7 @@ func (p *parser) skipWhitespaceAndComments() {
 			if i < len(p.s) {
 				// end of line; keep going
 				p.line++
+				i++
 				continue
 			}
 			// end of input; fall out of loop
