@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
+	//"log"
 	"os"
 	"strconv"
 	"unicode"
@@ -270,7 +270,7 @@ func (p *parser) next() *token {
 			p.cur.value = ""
 		}
 	}
-	log.Printf("parser·next(): returning %q [err: %v]", p.cur.value, p.cur.err)
+	//log.Printf("parser·next(): returning %q [err: %v]", p.cur.value, p.cur.err)
 	return &p.cur
 }
 
