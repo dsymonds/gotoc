@@ -3,5 +3,6 @@
 package foo;
 
 message Bar {
-  required int32 i = 1;
+  required int32 height = 1;
+  optional string name = 2;
 }

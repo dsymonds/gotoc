@@ -165,6 +165,7 @@ var fieldLabelMap = map[string]*FieldDescriptorProto_Label{
 }
 
 var fieldTypeMap = map[string]*FieldDescriptorProto_Type{
+	// Only basic types; enum, message and group are handled differently.
 	"double":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_DOUBLE),
 	"float":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FLOAT),
 	"int64":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_INT64),
@@ -174,11 +175,8 @@ var fieldTypeMap = map[string]*FieldDescriptorProto_Type{
 	"fixed32":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FIXED32),
 	"bool":     NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_BOOL),
 	"string":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_STRING),
-	"group":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_GROUP),
-	"message":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_MESSAGE),
 	"bytes":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_BYTES),
 	"uint32":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_UINT32),
-	"enum":     NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_ENUM),
 	"sfixed32": NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SFIXED32),
 	"sfixed64": NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SFIXED64),
 	"sint32":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SINT32),
@@ -202,7 +200,6 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 	}
 	if typ, ok := fieldTypeMap[tok.value]; ok {
 		f.Type = typ
-		f.TypeName = proto.String(tok.value)
 	} else {
 		return p.error("unknown field type %q", tok.value)
 	}
