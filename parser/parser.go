@@ -30,7 +30,9 @@ func ParseFiles(filenames []string) (*FileDescriptorSet, os.Error) {
 		if pe := p.readFile(fds.File[i]); pe != nil {
 			return nil, pe
 		}
-		log.Printf("Leftovers: %q", p.s)
+		if p.s != "" {
+			return nil, p.error("input was not all consumed")
+		}
 	}
 
 	return fds, nil
@@ -77,29 +79,24 @@ func newParser(s string) *parser {
 }
 
 func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
-	// Read package
-	if err := p.readToken("package"); err != nil {
-		return err
-	}
-
-	tok := p.next()
-	if tok.err != nil {
-		return tok.err
-	}
-	// TODO: check for a good package name
-	fd.Package = proto.String(tok.value)
-
-	if err := p.readToken(";"); err != nil {
-		return err
-	}
-
-	// Parse the rest of the file.
+	// Parse the top-level things.
 	for !p.done {
 		tok := p.next()
 		if tok.err != nil {
 			return tok.err
 		}
 		switch tok.value {
+		case "package":
+			tok := p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			// TODO: check for a good package name
+			fd.Package = proto.String(tok.value)
+
+			if err := p.readToken(";"); err != nil {
+				return err
+			}
 		case "message":
 			p.back()
 			msg := new(DescriptorProto)
@@ -214,7 +211,6 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 		f.Type = typ
 	} else {
 		// TODO: type names need checking; this just guesses it's a message, but it could be an enum.
-		f.Type = NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_MESSAGE)
 		f.TypeName = proto.String(tok.value)
 	}
 
