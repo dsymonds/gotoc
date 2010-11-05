@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"unicode"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
 	"goprotobuf.googlecode.com/hg/proto"
@@ -79,12 +80,14 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 	if err := p.readToken("package"); err != nil {
 		return err
 	}
+
 	tok := p.next()
 	if tok.err != nil {
 		return tok.err
 	}
 	// TODO: check for a good package name
 	fd.Package = proto.String(tok.value)
+
 	if err := p.readToken(";"); err != nil {
 		return err
 	}
@@ -168,7 +171,7 @@ func (p *parser) advance() {
 			i++
 		}
 		if i == 0 {
-			p.error("unexpected byte 0x%02x", p.s[0])
+			p.error("unexpected byte 0x%02x (%q)", p.s[0], string(p.s[:1]))
 			return
 		}
 		p.cur.value, p.s = p.s[:i], p.s[i:]
@@ -220,8 +223,8 @@ func (p *parser) error(format string, a ...interface{}) *parseError {
 }
 
 func isWhitespace(c byte) bool {
-	// TODO: do better
-	return c == ' ' || c == '\n'
+	// TODO: do more accurately
+	return unicode.IsSpace(int(c))
 }
 
 // Numbers and identifiers are matched by [-+._A-Za-z0-9]
