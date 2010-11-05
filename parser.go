@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
@@ -27,6 +28,7 @@ func ParseFiles(filenames []string) (*FileDescriptorSet, os.Error) {
 		if pe := p.readFile(fds.File[i]); pe != nil {
 			return nil, pe
 		}
+		log.Printf("Leftovers: %q", p.s)
 	}
 
 	return fds, nil
@@ -84,8 +86,31 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 		return err
 	}
 
+	// Parse the rest of the file.
+	for !p.done {
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		switch tok.value {
+		case "message":
+			msg := new(DescriptorProto)
+			fd.MessageType = append(fd.MessageType, msg)
+			if err := p.readMessage(msg); err != nil {
+				return err
+			}
+		default:
+			return p.error("unknown top-level thing %q", tok.value)
+		}
+	}
+
 	// TODO: more
 
+	return nil
+}
+
+func (p *parser) readMessage(d *DescriptorProto) *parseError {
+	// TODO
 	return nil
 }
 
