@@ -29,17 +29,37 @@ func tryParse(t *testing.T, input, output string) {
 	}
 }
 
-func TestNestedMessage(t *testing.T) {
-	tryParse(t,
-`message TestMessage {
-	message Nested {}
-	optional Nested test_nested = 1;
+type parseTest struct {
+	name            string
+	input, expected string
 }
-`, `
-message_type {
-  name: "TestMessage"
-  nested_type { name: "Nested" }
-  field { name:"test_nested" label:LABEL_OPTIONAL number:1 type_name: "Nested" }
+
+var parseTests = []parseTest{
+	{
+		"SimpleMessage",
+		"message TestMessage {\n  required int32 foo = 1;\n}\n",
+		`message_type { name: "TestMessage" field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:1 } }`,
+	},
+	{
+		"SimpleFields",
+		"message TestMessage {\n  required int32 foo = 15;\n  optional int32 bar = 34;\n  repeated int32 baz = 3;\n}\n",
+		`message_type {
+		   name: "TestMessage"
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:15 }
+		   field { name:"bar" label:LABEL_OPTIONAL type:TYPE_INT32 number:34 }
+		   field { name:"baz" label:LABEL_REPEATED type:TYPE_INT32 number:3  }
+		 }`,
+	},
+	{
+		"NestedMessage",
+		"message TestMessage {\n  message Nested {}\n  optional Nested test_nested = 1;\n  }\n",
+		`message_type { name: "TestMessage" nested_type { name: "Nested" } field { name:"test_nested" label:LABEL_OPTIONAL number:1 type_name: "Nested" } }`,
+	},
 }
-`)
+
+func TestParsing(t *testing.T) {
+	for _, pt := range parseTests {
+		t.Logf("[ %v ]", pt.name)
+		tryParse(t, pt.input, pt.expected)
+	}
 }
