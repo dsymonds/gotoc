@@ -131,7 +131,7 @@ func (p *parser) readToken(expected string) *parseError {
 	return nil
 }
 
-// Back off the parser by one token; may only be done between calls to next().
+// Back off the parser by one token; may only be done between calls to p.next().
 func (p *parser) back() {
 	p.backed = true
 }
@@ -162,7 +162,7 @@ func (p *parser) advance() {
 	p.cur.offset, p.cur.line = p.offset, p.line
 	switch p.s[0] {
 	// TODO: more cases, like punctuation.
-	case ';':
+	case ';', '{', '}', '=':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
 	default:
