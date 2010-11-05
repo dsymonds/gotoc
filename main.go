@@ -11,6 +11,8 @@ import (
 
 	plugin "goprotobuf.googlecode.com/hg/compiler/plugin"
 	"goprotobuf.googlecode.com/hg/proto"
+
+	"gotoc/parser"
 )
 
 var (
@@ -44,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fds, err := ParseFiles(flag.Args())
+	fds, err := parser.ParseFiles(flag.Args())
 	if err != nil {
 		log.Exitf("Failed parsing: %v", err)
 	}
