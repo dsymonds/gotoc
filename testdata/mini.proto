@@ -5,4 +5,12 @@ package foo;
 message Bar {
   required int32 height = 1;
   optional string name = 2;
+  optional Other other = 3;
+
+  message Nested {}
+  optional Nested nested = 4;
+}
+
+message Other {
+  required int64 count = 1;
 }

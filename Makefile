@@ -7,5 +7,5 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.cmd
 
-test: $(TARG)
+minitest: $(TARG)
 	./$(TARG) testdata/mini.proto

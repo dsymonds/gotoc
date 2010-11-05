@@ -48,6 +48,9 @@ func main() {
 	if err != nil {
 		log.Exitf("Failed parsing: %v", err)
 	}
+	fmt.Println("-----")
+	proto.MarshalText(os.Stdout, fds)
+	fmt.Println("-----")
 
 	// Find plugin.
 	pluginPath := fullPath(*pluginBinary, strings.Split(os.Getenv("PATH"), ":", -1))
@@ -107,9 +110,6 @@ func main() {
 	// TODO: check cgResponse.Error
 
 	// TODO: write files
-	fmt.Println("-----")
-	proto.MarshalText(os.Stdout, fds)
-	fmt.Println("-----")
 	for _, f := range cgResponse.File {
 		fmt.Printf("--[ %v ]--\n", proto.GetString(f.Name))
 		fmt.Println(proto.GetString(f.Content))
