@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"unicode"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
@@ -105,6 +106,7 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			if err := p.readMessage(msg); err != nil {
 				return err
 			}
+		// TODO: more top-level things
 		case "":
 			// EOF
 			break
@@ -131,15 +133,105 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 		return err
 	}
 
-	// TODO: do this properly... (HACK HACK HACK)
-	for {
+	// Parse message fields and other things inside messages.
+	for !p.done {
 		tok := p.next()
 		if tok.err != nil {
 			return tok.err
 		}
-		if tok.value == "}" {
+		switch tok.value {
+		case "required", "optional", "repeated":
+			// field
+			p.back()
+			f := new(FieldDescriptorProto)
+			d.Field = append(d.Field, f)
+			if err := p.readField(f); err != nil {
+				return err
+			}
+		// TODO: more message contents
+		case "}":
+			// end of message
 			break
 		}
+	}
+
+	return nil
+}
+
+var fieldLabelMap = map[string]*FieldDescriptorProto_Label{
+	"required": NewFieldDescriptorProto_Label(FieldDescriptorProto_LABEL_REQUIRED),
+	"optional": NewFieldDescriptorProto_Label(FieldDescriptorProto_LABEL_OPTIONAL),
+	"repeated": NewFieldDescriptorProto_Label(FieldDescriptorProto_LABEL_REPEATED),
+}
+
+var fieldTypeMap = map[string]*FieldDescriptorProto_Type{
+	"double":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_DOUBLE),
+	"float":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FLOAT),
+	"int64":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_INT64),
+	"uint64":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_UINT64),
+	"int32":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_INT32),
+	"fixed64":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FIXED64),
+	"fixed32":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FIXED32),
+	"bool":     NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_BOOL),
+	"string":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_STRING),
+	"group":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_GROUP),
+	"message":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_MESSAGE),
+	"bytes":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_BYTES),
+	"uint32":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_UINT32),
+	"enum":     NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_ENUM),
+	"sfixed32": NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SFIXED32),
+	"sfixed64": NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SFIXED64),
+	"sint32":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SINT32),
+	"sint64":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SINT64),
+}
+
+func (p *parser) readField(f *FieldDescriptorProto) *parseError {
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	if lab, ok := fieldLabelMap[tok.value]; ok {
+		f.Label = lab
+	} else {
+		return p.error("expected required/optional/repeated, found %q", tok.value)
+	}
+
+	tok = p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	if typ, ok := fieldTypeMap[tok.value]; ok {
+		f.Type = typ
+		f.TypeName = proto.String(tok.value)
+	} else {
+		return p.error("unknown field type %q", tok.value)
+	}
+
+	tok = p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	// TODO: check field name correctness (character set, etc.)
+	f.Name = proto.String(tok.value)
+
+	if err := p.readToken("="); err != nil {
+		return err
+	}
+
+	tok = p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	num, err := atoi32(tok.value)
+	if err != nil {
+		return p.error("bad field number %q: %v", tok.value, err)
+	}
+	f.Number = proto.Int32(num)
+
+	// TODO: default value, options
+
+	if err := p.readToken(";"); err != nil {
+		return err
 	}
 
 	return nil
@@ -265,4 +357,15 @@ func isIdentOrNumberChar(c byte) bool {
 		return true
 	}
 	return false
+}
+
+func atoi32(s string) (int32, os.Error) {
+	x, err := strconv.Atoi64(s)
+	if err != nil {
+		return 0, err
+	}
+	if x < (-1 << 31) || x > (1<<31 - 1) {
+		return 0, os.NewError("out of int32 range")
+	}
+	return int32(x), nil
 }
