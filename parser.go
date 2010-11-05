@@ -105,6 +105,9 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			if err := p.readMessage(msg); err != nil {
 				return err
 			}
+		case "":
+			// EOF
+			break
 		default:
 			return p.error("unknown top-level thing %q", tok.value)
 		}
@@ -116,7 +119,29 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 }
 
 func (p *parser) readMessage(d *DescriptorProto) *parseError {
-	// TODO
+	// "message" already parsed.
+
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	d.Name = proto.String(tok.value)
+
+	if err := p.readToken("{"); err != nil {
+		return err
+	}
+
+	// TODO: do this properly... (HACK HACK HACK)
+	for {
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		if tok.value == "}" {
+			break
+		}
+	}
+
 	return nil
 }
 
