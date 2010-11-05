@@ -41,6 +41,9 @@ type parseError struct {
 }
 
 func (pe *parseError) String() string {
+	if pe == nil {
+		return "<nil>"
+	}
 	if pe.line == 1 {
 		return fmt.Sprintf("line 1.%d: %v", pe.offset, pe.message)
 	}
@@ -134,12 +137,13 @@ func (p *parser) back() {
 func (p *parser) next() *token {
 	if p.backed || p.done {
 		p.backed = false
-		return &p.cur
+	} else {
+		p.advance()
+		if p.done {
+			p.cur.value = ""
+		}
 	}
-	p.advance()
-	if p.done {
-		p.cur.value = ""
-	}
+	log.Printf("parser·next(): returning %q [err: %v]", p.cur.value, p.cur.err)
 	return &p.cur
 }
 
@@ -164,7 +168,7 @@ func (p *parser) advance() {
 			i++
 		}
 		if i == 0 {
-			p.error("unexpected byte %#x", p.s[0])
+			p.error("unexpected byte 0x%02x", p.s[0])
 			return
 		}
 		p.cur.value, p.s = p.s[:i], p.s[i:]
@@ -217,7 +221,7 @@ func (p *parser) error(format string, a ...interface{}) *parseError {
 
 func isWhitespace(c byte) bool {
 	// TODO: do better
-	return c == ' '
+	return c == ' ' || c == '\n'
 }
 
 // Numbers and identifiers are matched by [-+._A-Za-z0-9]
