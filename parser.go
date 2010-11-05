@@ -101,6 +101,7 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 		}
 		switch tok.value {
 		case "message":
+			p.back()
 			msg := new(DescriptorProto)
 			fd.MessageType = append(fd.MessageType, msg)
 			if err := p.readMessage(msg); err != nil {
@@ -121,12 +122,15 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 }
 
 func (p *parser) readMessage(d *DescriptorProto) *parseError {
-	// "message" already parsed.
+	if err := p.readToken("message"); err != nil {
+		return err
+	}
 
 	tok := p.next()
 	if tok.err != nil {
 		return tok.err
 	}
+	// TODO: check that the name is acceptable.
 	d.Name = proto.String(tok.value)
 
 	if err := p.readToken("{"); err != nil {
@@ -148,14 +152,22 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 			if err := p.readField(f); err != nil {
 				return err
 			}
+		case "message":
+			// inner message
+			p.back()
+			msg := new(DescriptorProto)
+			d.NestedType = append(d.NestedType, msg)
+			if err := p.readMessage(msg); err != nil {
+				return err
+			}
 		// TODO: more message contents
 		case "}":
 			// end of message
-			break
+			return nil
 		}
 	}
 
-	return nil
+	return p.error("unexpected end while parsing message")
 }
 
 var fieldLabelMap = map[string]*FieldDescriptorProto_Label{
@@ -201,7 +213,9 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 	if typ, ok := fieldTypeMap[tok.value]; ok {
 		f.Type = typ
 	} else {
-		return p.error("unknown field type %q", tok.value)
+		// TODO: type names need checking; this just guesses it's a message, but it could be an enum.
+		f.Type = NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_MESSAGE)
+		f.TypeName = proto.String(tok.value)
 	}
 
 	tok = p.next()
