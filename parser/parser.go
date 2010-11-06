@@ -97,6 +97,13 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			if err := p.readToken(";"); err != nil {
 				return err
 			}
+		case "enum":
+			p.back()
+			e := new(EnumDescriptorProto)
+			fd.EnumType = append(fd.EnumType, e)
+			if err := p.readEnum(e); err != nil {
+				return err
+			}
 		case "message":
 			p.back()
 			msg := new(DescriptorProto)
@@ -116,6 +123,60 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 	// TODO: more
 
 	return nil
+}
+
+func (p *parser) readEnum(e *EnumDescriptorProto) *parseError {
+	if err := p.readToken("enum"); err != nil {
+		return err
+	}
+
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	// TODO: check that the name is acceptable.
+	e.Name = proto.String(tok.value)
+
+	if err := p.readToken("{"); err != nil {
+		return err
+	}
+
+	// Parse enum values
+	for !p.done {
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		if tok.value == "}" {
+			// end of enum
+			return nil
+		}
+		// TODO: verify tok.value is a valid enum value name.
+		ev := new(EnumValueDescriptorProto)
+		e.Value = append(e.Value, ev)
+		ev.Name = proto.String(tok.value)
+
+		if err := p.readToken("="); err != nil {
+			return err
+		}
+
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		// TODO: check that tok.value is a valid enum value number.
+		num, err := atoi32(tok.value)
+		if err != nil {
+			return p.error("bad enum number %q: %v", tok.value, err)
+		}
+		ev.Number = proto.Int32(num)
+
+		if err := p.readToken(";"); err != nil {
+			return err
+		}
+	}
+
+	return p.error("unexpected end while parsing enum")
 }
 
 func (p *parser) readMessage(d *DescriptorProto) *parseError {
@@ -161,6 +222,8 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 		case "}":
 			// end of message
 			return nil
+		default:
+			return p.error("unexpected token %q while parsing message", tok.value)
 		}
 	}
 

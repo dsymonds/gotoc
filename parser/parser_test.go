@@ -55,6 +55,11 @@ var parseTests = []parseTest{
 		"message TestMessage {\n  message Nested {}\n  optional Nested test_nested = 1;\n  }\n",
 		`message_type { name: "TestMessage" nested_type { name: "Nested" } field { name:"test_nested" label:LABEL_OPTIONAL number:1 type_name: "Nested" } }`,
 	},
+	{
+		"EnumValues",
+		"enum TestEnum {\n  FOO = 13;\n  BAR = -10;\n  BAZ = 500;\n}\n",
+		`enum_type { name: "TestEnum" value { name:"FOO" number:13 } value { name:"BAR" number:-10 } value { name:"BAZ" number:500 } }`,
+	},
 }
 
 func TestParsing(t *testing.T) {
