@@ -210,8 +210,16 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 			if err := p.readField(f); err != nil {
 				return err
 			}
+		case "enum":
+			// nested enum
+			p.back()
+			e := new(EnumDescriptorProto)
+			d.EnumType = append(d.EnumType, e)
+			if err := p.readEnum(e); err != nil {
+				return err
+			}
 		case "message":
-			// inner message
+			// nested message
 			p.back()
 			msg := new(DescriptorProto)
 			d.NestedType = append(d.NestedType, msg)
@@ -273,7 +281,6 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 	if typ, ok := fieldTypeMap[tok.value]; ok {
 		f.Type = typ
 	} else {
-		// TODO: type names need checking; this just guesses it's a message, but it could be an enum.
 		f.TypeName = proto.String(tok.value)
 	}
 
