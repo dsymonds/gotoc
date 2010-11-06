@@ -8,5 +8,8 @@ DEPS=parser
 
 include $(GOROOT)/src/Make.cmd
 
+test:
+	make -C parser test
+
 minitest: $(TARG)
 	./$(TARG) testdata/mini.proto
