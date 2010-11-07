@@ -6,6 +6,7 @@ import (
 	//"log"
 	"os"
 	"strconv"
+	"strings"
 	"unicode"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
@@ -87,12 +88,34 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 		}
 		switch tok.value {
 		case "package":
-			tok := p.next()
-			if tok.err != nil {
-				return tok.err
+			parts := make([]string, 0, 3) // enough for most
+			for {
+				tok := p.next()
+				if tok.err != nil {
+					return tok.err
+				}
+				more := false
+				if tok.value[len(tok.value)-1] == '.' {
+					tok.value = tok.value[:len(tok.value)-1]
+					more = true
+				}
+				parts = append(parts, tok.value)
+				if more {
+					continue
+				}
+
+				// If a period is the next token then there's another package component.
+				tok = p.next()
+				if tok.err != nil {
+					return tok.err
+				}
+				if tok.value != "." {
+					p.back()
+					break
+				}
 			}
 			// TODO: check for a good package name
-			fd.Package = proto.String(tok.value)
+			fd.Package = proto.String(strings.Join(parts, "."))
 
 			if err := p.readToken(";"); err != nil {
 				return err

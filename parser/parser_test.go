@@ -65,6 +65,16 @@ var parseTests = []parseTest{
 		"enum TestEnum {\n  FOO = 13;\n  BAR = -10;\n  BAZ = 500;\n}\n",
 		`enum_type { name: "TestEnum" value { name:"FOO" number:13 } value { name:"BAR" number:-10 } value { name:"BAZ" number:500 } }`,
 	},
+	{
+		"ParsePackage",
+		"package foo.bar.baz;\n",
+		`package: "foo.bar.baz"`,
+	},
+	{
+		"ParsePackageWithSpaces",
+		"package foo   .   bar.  \n  baz;\n",
+		`package: "foo.bar.baz"`,
+	},
 }
 
 func TestParsing(t *testing.T) {
