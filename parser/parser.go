@@ -295,15 +295,10 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 		return err
 	}
 
-	tok = p.next()
-	if tok.err != nil {
-		return tok.err
+	f.Number = new(int32)
+	if err := p.readTagNumber(f.Number); err != nil {
+		return err
 	}
-	num, err := atoi32(tok.value)
-	if err != nil {
-		return p.error("bad field number %q: %v", tok.value, err)
-	}
-	f.Number = proto.Int32(num)
 
 	// TODO: default value, options
 
@@ -311,6 +306,26 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 		return err
 	}
 
+	return nil
+}
+
+func (p *parser) readTagNumber(num *int32) *parseError {
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	n, err := atoi32(tok.value)
+	if err != nil {
+		return p.error("bad field number %q: %v", tok.value, err)
+	}
+	if n < 1 || n >= (1 << 29) {
+		return p.error("field number %v out of range", n)
+	}
+	// 19000-19999 are reserved.
+	if n >= 19000 && n <= 19999 {
+		return p.error("field number %v in reserved range [19000, 19999]", n)
+	}
+	*num = n
 	return nil
 }
 
