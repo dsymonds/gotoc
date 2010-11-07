@@ -4,7 +4,7 @@ TARG=gotoc
 GOFILES=\
 	main.go\
 
-DEPS=parser
+DEPS=parser resolver
 
 include $(GOROOT)/src/Make.cmd
 

@@ -13,6 +13,7 @@ import (
 	"goprotobuf.googlecode.com/hg/proto"
 
 	"gotoc/parser"
+	"gotoc/resolver"
 )
 
 var (
@@ -50,6 +51,7 @@ func main() {
 	if err != nil {
 		log.Exitf("Failed parsing: %v", err)
 	}
+	resolver.ResolveSymbols(fds)
 	fmt.Println("-----")
 	proto.MarshalText(os.Stdout, fds)
 	fmt.Println("-----")
