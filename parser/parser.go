@@ -6,6 +6,7 @@ import (
 	//"log"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -18,6 +19,7 @@ func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, o
 	fds := &FileDescriptorSet{
 		File: make([]*FileDescriptorProto, 0, len(filenames)),
 	}
+	index := make(map[string]int, len(filenames)) // map of filename to index
 
 	parsedFiles := make(map[string]int, len(filenames))
 	for len(filenames) > 0 {
@@ -29,6 +31,7 @@ func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, o
 		fd := &FileDescriptorProto{
 			Name: proto.String(filename),
 		}
+		index[filename] = len(fds.File)
 		fds.File = append(fds.File, fd)
 
 		fullFilename := resolveFilename(filename, importPaths)
@@ -56,6 +59,8 @@ func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, o
 		}
 	}
 
+	topologicallySort(fds.File, index)
+
 	return fds, nil
 }
 
@@ -69,6 +74,33 @@ func resolveFilename(filename string, paths []string) string {
 		}
 	}
 	return ""
+}
+
+func topologicallySort(files []*FileDescriptorProto, index map[string]int) {
+	sort.Sort(&sortableFiles{files, index})
+}
+
+type sortableFiles struct {
+	files []*FileDescriptorProto
+	index map[string]int
+}
+
+func (sf *sortableFiles) Len() int { return len(sf.files) }
+func (sf *sortableFiles) Swap(i, j int) {
+	sf.index[*sf.files[i].Name], sf.index[*sf.files[j].Name] = j, i
+	sf.files[i], sf.files[j] = sf.files[j], sf.files[i]
+}
+func (sf *sortableFiles) Less(i, j int) bool {
+	if i == j { return false }
+
+	// Determine whether there is a dependency chain from j to i.
+	for _, dep := range sf.files[j].Dependency {
+		idep := sf.index[dep]
+		if idep == i || sf.Less(idep, j) {
+			return true
+		}
+	}
+	return false
 }
 
 type parseError struct {
