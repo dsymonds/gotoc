@@ -59,6 +59,7 @@ type token struct {
 	value        string
 	err          *parseError
 	line, offset int
+	unquoted     string // unquoted version of value
 }
 
 type parser struct {
@@ -116,6 +117,16 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			}
 			// TODO: check for a good package name
 			fd.Package = proto.String(strings.Join(parts, "."))
+
+			if err := p.readToken(";"); err != nil {
+				return err
+			}
+		case "import":
+			tok, err := p.readString()
+			if err != nil {
+				return err
+			}
+			fd.Dependency = append(fd.Dependency, tok.unquoted)
 
 			if err := p.readToken(";"); err != nil {
 				return err
@@ -352,6 +363,17 @@ func (p *parser) readTagNumber(num *int32) *parseError {
 	return nil
 }
 
+func (p *parser) readString() (*token, *parseError) {
+	tok := p.next()
+	if tok.err != nil {
+		return nil, tok.err
+	}
+	if tok.value[0] != '"' {
+		return nil, p.error("expected string, found %q", tok.value)
+	}
+	return tok, nil
+}
+
 func (p *parser) readToken(expected string) *parseError {
 	tok := p.next()
 	if tok.err != nil {
@@ -397,6 +419,27 @@ func (p *parser) advance() {
 	case ';', '{', '}', '=':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
+	case '"':
+		// Quoted string
+		i := 1
+		for i < len(p.s) && p.s[i] != '"' {
+			if p.s[i] == '\\' && i+1 < len(p.s) {
+				// skip escaped character
+				i++
+			}
+			i++
+		}
+		if i >= len(p.s) {
+			p.error("encountered EOF inside string")
+			return
+		}
+		i++
+		p.cur.value, p.s = p.s[:i], p.s[i:]
+		unq, err := strconv.Unquote(p.cur.value)
+		if err != nil {
+			p.error("invalid quoted string: %v", err)
+		}
+		p.cur.unquoted = unq
 	default:
 		i := 0
 		for i < len(p.s) && isIdentOrNumberChar(p.s[i]) {

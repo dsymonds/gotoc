@@ -75,6 +75,11 @@ var parseTests = []parseTest{
 		"package foo   .   bar.  \n  baz;\n",
 		`package: "foo.bar.baz"`,
 	},
+	{
+		"ParseImport",
+		"import \"foo/bar/baz.proto\";\n",
+		`dependency: "foo/bar/baz.proto"`,
+	},
 }
 
 func TestParsing(t *testing.T) {
