@@ -2,6 +2,8 @@
 // As you can see, comments will be ignored.
 package foo;
 
+import "testdata/imp.proto";
+
 message Bar {
   required int32 height = 1;
   optional string name = 2;
@@ -9,6 +11,9 @@ message Bar {
 
   message Nested {}
   optional Nested nested = 4;
+
+  // TODO: doesn't work yet.
+  //optional Foreign alien = 5;
 }
 
 message Other {

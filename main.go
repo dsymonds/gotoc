@@ -21,6 +21,7 @@ var (
 	helpShort = flag.Bool("h", false, "Show usage text (same as --help).")
 	helpLong  = flag.Bool("help", false, "Show usage text (same as -h).")
 
+	importPath = flag.String("import_path", ".", "Comma-separated list of paths to search for imports.")
 	pluginBinary = flag.String("plugin", "protoc-gen-go", "The code generator plugin to use.")
 )
 
@@ -47,7 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fds, err := parser.ParseFiles(flag.Args())
+	fds, err := parser.ParseFiles(flag.Args(), strings.Split(*importPath, ",", -1))
 	if err != nil {
 		log.Exitf("Failed parsing: %v", err)
 	}

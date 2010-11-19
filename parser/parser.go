@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	//"log"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"unicode"
@@ -13,30 +14,61 @@ import (
 	"goprotobuf.googlecode.com/hg/proto"
 )
 
-func ParseFiles(filenames []string) (*FileDescriptorSet, os.Error) {
+func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, os.Error) {
 	fds := &FileDescriptorSet{
-		File: make([]*FileDescriptorProto, len(filenames)),
+		File: make([]*FileDescriptorProto, 0, len(filenames)),
 	}
 
-	for i, filename := range filenames {
-		fds.File[i] = &FileDescriptorProto{
+	parsedFiles := make(map[string]int, len(filenames))
+	for len(filenames) > 0 {
+		filename := filenames[0]
+		filenames = filenames[1:]
+		if _, ok := parsedFiles[filename]; ok {
+			continue
+		}
+		fd := &FileDescriptorProto{
 			Name: proto.String(filename),
 		}
-		buf, err := ioutil.ReadFile(filename)
+		fds.File = append(fds.File, fd)
+
+		fullFilename := resolveFilename(filename, importPaths)
+		if fullFilename == "" {
+			return nil, fmt.Errorf("failed finding %q", filename)
+		}
+		buf, err := ioutil.ReadFile(fullFilename)
 		if err != nil {
 			return nil, err
 		}
 
 		p := newParser(string(buf))
-		if pe := p.readFile(fds.File[i]); pe != nil {
+		if pe := p.readFile(fd); pe != nil {
 			return nil, pe
 		}
 		if p.s != "" {
 			return nil, p.error("input was not all consumed")
 		}
+
+		// Enqueue dependencies.
+		for _, f := range fd.Dependency {
+			if _, ok := parsedFiles[f]; !ok {
+				filenames = append(filenames, f)
+			}
+		}
 	}
 
 	return fds, nil
+}
+
+// TODO: This is almost identical to fullPath in main.go. Merge them.
+func resolveFilename(filename string, paths []string) string {
+	for _, p := range paths {
+		full := path.Join(p, filename)
+		fi, err := os.Stat(full)
+		if err == nil && fi.IsRegular() {
+			return full
+		}
+	}
+	return ""
 }
 
 type parseError struct {
