@@ -52,7 +52,9 @@ func main() {
 	if err != nil {
 		log.Exitf("Failed parsing: %v", err)
 	}
-	resolver.ResolveSymbols(fds)
+	if err := resolver.ResolveSymbols(fds); err != nil {
+		log.Exitf("Failed resolving symbols: %v", err)
+	}
 	fmt.Println("-----")
 	proto.MarshalText(os.Stdout, fds)
 	fmt.Println("-----")

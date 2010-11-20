@@ -1,10 +1,12 @@
 package resolver
 
-// TODO: The resolution implementation here is horribly inefficient.
+// TODO: The resolution implementation here is quite inefficient.
 // It may be worth optimising it at some point.
 
 import (
-	"log"
+	"fmt"
+	//"log"
+	"os"
 	"strings"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
@@ -12,13 +14,16 @@ import (
 )
 
 // TODO: signal errors cleanly?
-func ResolveSymbols(fds *FileDescriptorSet) {
+func ResolveSymbols(fds *FileDescriptorSet) os.Error {
 	r := &resolver{
 		fds:       fds,
 	}
 	for _, fd := range fds.File {
-		r.resolveFile(fd)
+		if err := r.resolveFile(fd); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // A scope represents the context of the traversal.
@@ -113,19 +118,23 @@ type resolver struct {
 	fds       *FileDescriptorSet
 }
 
-func (r *resolver) resolveFile(fd *FileDescriptorProto) {
+func (r *resolver) resolveFile(fd *FileDescriptorProto) os.Error {
 	s := new(scope)
 	s.push(fd)
 
 	// Resolve messages.
 	for _, d := range fd.MessageType {
-		r.resolveMessage(s, d)
+		if err := r.resolveMessage(s, d); err != nil {
+			return fmt.Errorf("(%v): %v", *fd.Name, err)
+		}
 	}
 
 	// TODO: resolve other file-level types.
+
+	return nil
 }
 
-func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) {
+func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) os.Error {
 	ms := s.dup()
 	ms.push(d)
 
@@ -138,8 +147,7 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) {
 		}
 		o := r.resolveName(ms, *fd.TypeName)
 		if o == nil {
-			log.Printf("Failed to resolve name %q", *fd.TypeName)
-			continue
+			return fmt.Errorf("failed to resolve name %q", *fd.TypeName)
 		}
 		switch ov := o.last().(type) {
 		case *DescriptorProto:
@@ -150,6 +158,7 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) {
 		//log.Printf("(resolved %q to %q)", *fd.TypeName, o.fullName())
 		fd.TypeName = proto.String(o.fullName())
 	}
+	return nil
 }
 
 func (r *resolver) resolveName(s *scope, name string) *scope {
