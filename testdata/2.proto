@@ -1,0 +1,12 @@
+// Nested message, plus some message references.
+
+message A {
+  message B {
+  }
+  optional B b = 1;
+}
+
+message C {
+  optional A a = 1;
+  optional A.B b = 2;
+}

@@ -1,0 +1,33 @@
+file: <
+  name: "2.proto"
+  message_type: <
+    name: "A"
+    field: <
+      name: "b"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_MESSAGE
+      type_name: ".A.B"
+    >
+    nested_type: <
+      name: "B"
+    >
+  >
+  message_type: <
+    name: "C"
+    field: <
+      name: "a"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_MESSAGE
+      type_name: ".A"
+    >
+    field: <
+      name: "b"
+      number: 2
+      label: LABEL_OPTIONAL
+      type: TYPE_MESSAGE
+      type_name: ".A.B"
+    >
+  >
+>

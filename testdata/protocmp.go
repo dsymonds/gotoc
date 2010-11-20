@@ -121,6 +121,15 @@ func cmpMessages(a, b *DescriptorProto) {
 		cmpFields(fA, b.Field[i])
 	}
 
+	// TODO: this should be order-independent too.
+	if len(a.NestedType) != len(b.NestedType) {
+		log.Exitf("Different number of nested messages in message %v: %d vs. %d",
+			*a.Name, len(a.NestedType), len(b.NestedType))
+	}
+	for i, msgA := range a.NestedType {
+		cmpMessages(msgA, b.NestedType[i])
+	}
+
 	// TODO: nested_type, enum_type
 }
 
