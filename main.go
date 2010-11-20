@@ -23,6 +23,7 @@ var (
 
 	importPath = flag.String("import_path", ".", "Comma-separated list of paths to search for imports.")
 	pluginBinary = flag.String("plugin", "protoc-gen-go", "The code generator plugin to use.")
+	descriptorOnly = flag.Bool("descriptor_only", false, "Whether to print out only the FileDescriptorSet.")
 )
 
 func fullPath(binary string, paths []string) string {
@@ -55,6 +56,12 @@ func main() {
 	if err := resolver.ResolveSymbols(fds); err != nil {
 		log.Exitf("Failed resolving symbols: %v", err)
 	}
+
+	if *descriptorOnly {
+		proto.MarshalText(os.Stdout, fds)
+		os.Exit(0)
+	}
+
 	fmt.Println("-----")
 	proto.MarshalText(os.Stdout, fds)
 	fmt.Println("-----")
