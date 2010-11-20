@@ -2,4 +2,10 @@
 
 message Foreign {
   optional string country = 1;
+
+  enum Currency {
+    AUD = 1;
+    USD = 2;
+    GBP = 3;
+  }
 }

@@ -1,6 +1,10 @@
 // This is an imported proto, but this time it has a package.
 package imp2;
 
+import "testdata/imp.proto";
+
 message Document {
   optional fixed64 docid = 1;
+
+  optional Foreign.Currency currency = 2;
 }
