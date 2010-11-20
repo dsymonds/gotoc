@@ -3,6 +3,7 @@
 package foo;
 
 import "testdata/imp.proto";
+import "testdata/imp2.proto";
 
 message Bar {
   required int32 height = 1;
@@ -12,8 +13,8 @@ message Bar {
   message Nested {}
   optional Nested nested = 4;
 
-  // TODO: doesn't work yet.
   optional Foreign alien = 5;
+  optional imp2.Document doc = 6;
 }
 
 message Other {

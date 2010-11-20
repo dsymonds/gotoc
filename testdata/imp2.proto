@@ -1,0 +1,6 @@
+// This is an imported proto, but this time it has a package.
+package imp2;
+
+message Document {
+  optional fixed64 docid = 1;
+}

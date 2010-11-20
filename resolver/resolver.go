@@ -82,8 +82,10 @@ func (s *scope) findName(name string) []interface{} {
 				ret = append(ret, fs.findName(name)...)
 			} else {
 				// Match on package name
-				// TODO
 				// TODO: fix this for dotted package names
+				if *fd.Package == name {
+					return []interface{}{fd}
+				}
 			}
 		}
 		return ret
