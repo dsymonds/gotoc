@@ -13,13 +13,14 @@ import (
 	"goprotobuf.googlecode.com/hg/proto"
 )
 
-// TODO: signal errors cleanly?
 func ResolveSymbols(fds *FileDescriptorSet) os.Error {
 	r := &resolver{
 		fds:       fds,
 	}
+	s := new(scope)
+	s.push(fds)
 	for _, fd := range fds.File {
-		if err := r.resolveFile(fd); err != nil {
+		if err := r.resolveFile(s, fd); err != nil {
 			return err
 		}
 	}
@@ -29,6 +30,7 @@ func ResolveSymbols(fds *FileDescriptorSet) os.Error {
 // A scope represents the context of the traversal.
 type scope struct {
 	// Valid objects are:
+	//	FileDescriptorSet
 	//	FileDescriptorProto
 	//	DescriptorProto
 	//	EnumDescriptorProto
@@ -64,32 +66,47 @@ func (s *scope) last() interface{} {
 
 // findName attemps to find the given name in the scope.
 // Only immediate names are found; it does not recurse.
-func (s *scope) findName(name string) interface{} {
+func (s *scope) findName(name string) []interface{} {
 	o := s.last()
 	if o == nil {
 		return nil
 	}
 	switch ov := o.(type) {
+	case *FileDescriptorSet:
+		ret := []interface{}{}
+		for _, fd := range ov.File {
+			if proto.GetString(fd.Package) == "" {
+				// No package; match on message/enum names
+				fs := s.dup()
+				fs.push(fd)
+				ret = append(ret, fs.findName(name)...)
+			} else {
+				// Match on package name
+				// TODO
+				// TODO: fix this for dotted package names
+			}
+		}
+		return ret
 	case *FileDescriptorProto:
 		for _, d := range ov.MessageType {
 			if *d.Name == name {
-				return d
+				return []interface{}{d}
 			}
 		}
 		for _, e := range ov.EnumType {
 			if *e.Name == name {
-				return e
+				return []interface{}{e}
 			}
 		}
 	case *DescriptorProto:
 		for _, d := range ov.NestedType {
 			if *d.Name == name {
-				return d
+				return []interface{}{d}
 			}
 		}
 		for _, e := range ov.EnumType {
 			if *e.Name == name {
-				return e
+				return []interface{}{e}
 			}
 		}
 	// can't be *EnumDescriptorProto
@@ -118,13 +135,13 @@ type resolver struct {
 	fds       *FileDescriptorSet
 }
 
-func (r *resolver) resolveFile(fd *FileDescriptorProto) os.Error {
-	s := new(scope)
-	s.push(fd)
+func (r *resolver) resolveFile(s *scope, fd *FileDescriptorProto) os.Error {
+	fs := s.dup()
+	fs.push(fd)
 
 	// Resolve messages.
 	for _, d := range fd.MessageType {
-		if err := r.resolveMessage(s, d); err != nil {
+		if err := r.resolveMessage(fs, d); err != nil {
 			return fmt.Errorf("(%v): %v", *fd.Name, err)
 		}
 	}
@@ -166,21 +183,28 @@ func (r *resolver) resolveName(s *scope, name string) *scope {
 
 	// Move up the scope, finding a place where the name makes sense.
 	for ws := s.dup(); !ws.global(); ws.pop() {
-		os := ws.dup()
-		for _, part := range parts {
-			o := os.findName(part)
-			if o == nil {
-				os = nil
-				break
-			}
-			os.push(o)
-		}
-		if os != nil {
-			// woo!
+		//log.Printf("Trying to resolve %q in %q", name, ws.fullName())
+		if os := matchNameComponents(ws, parts); os != nil {
 			return os
 		}
 	}
 
 	// failed
+	return nil
+}
+
+func matchNameComponents(s *scope, parts []string) *scope {
+	first, rem := parts[0], parts[1:]
+	for _, o := range s.findName(first) {
+		os := s.dup()
+		os.push(o)
+		if len(rem) == 0 {
+			return os
+		}
+		// TODO: catch ambiguous names here
+		if is := matchNameComponents(os, rem); is != nil {
+			return is
+		}
+	}
 	return nil
 }

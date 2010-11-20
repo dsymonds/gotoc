@@ -13,7 +13,7 @@ message Bar {
   optional Nested nested = 4;
 
   // TODO: doesn't work yet.
-  //optional Foreign alien = 5;
+  optional Foreign alien = 5;
 }
 
 message Other {
