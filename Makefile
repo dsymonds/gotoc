@@ -10,6 +10,7 @@ include $(GOROOT)/src/Make.cmd
 
 test:
 	make -C parser test
+	make -C testdata test
 
 minitest: $(TARG)
 	./$(TARG) testdata/mini.proto

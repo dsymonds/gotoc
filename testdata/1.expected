@@ -1,0 +1,24 @@
+file: <
+  name: "1.proto"
+  message_type: <
+    name: "A"
+    field: <
+      name: "a"
+      number: 1
+      label: LABEL_REQUIRED
+      type: TYPE_INT32
+    >
+    field: <
+      name: "b"
+      number: 2
+      label: LABEL_OPTIONAL
+      type: TYPE_STRING
+    >
+    field: <
+      name: "c"
+      number: 4
+      label: LABEL_REPEATED
+      type: TYPE_SINT64
+    >
+  >
+>
