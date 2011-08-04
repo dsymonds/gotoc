@@ -181,7 +181,7 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) os.Error {
 }
 
 func (r *resolver) resolveName(s *scope, name string) *scope {
-	parts := strings.Split(name, ".", -1)
+	parts := strings.Split(name, ".")
 
 	// Move up the scope, finding a place where the name makes sense.
 	for ws := s.dup(); !ws.global(); ws.pop() {
