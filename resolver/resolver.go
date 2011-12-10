@@ -6,16 +6,16 @@ package resolver
 import (
 	"fmt"
 	//"log"
-	"os"
+
 	"strings"
 
 	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
 	"goprotobuf.googlecode.com/hg/proto"
 )
 
-func ResolveSymbols(fds *FileDescriptorSet) os.Error {
+func ResolveSymbols(fds *FileDescriptorSet) error {
 	r := &resolver{
-		fds:       fds,
+		fds: fds,
 	}
 	s := new(scope)
 	s.push(fds)
@@ -111,7 +111,7 @@ func (s *scope) findName(name string) []interface{} {
 				return []interface{}{e}
 			}
 		}
-	// can't be *EnumDescriptorProto
+		// can't be *EnumDescriptorProto
 	}
 	return nil
 }
@@ -134,10 +134,10 @@ func (s *scope) fullName() string {
 }
 
 type resolver struct {
-	fds       *FileDescriptorSet
+	fds *FileDescriptorSet
 }
 
-func (r *resolver) resolveFile(s *scope, fd *FileDescriptorProto) os.Error {
+func (r *resolver) resolveFile(s *scope, fd *FileDescriptorProto) error {
 	fs := s.dup()
 	fs.push(fd)
 
@@ -153,7 +153,7 @@ func (r *resolver) resolveFile(s *scope, fd *FileDescriptorProto) os.Error {
 	return nil
 }
 
-func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) os.Error {
+func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) error {
 	ms := s.dup()
 	ms.push(d)
 
@@ -168,7 +168,7 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) os.Error {
 		if o == nil {
 			return fmt.Errorf("failed to resolve name %q", *fd.TypeName)
 		}
-		switch ov := o.last().(type) {
+		switch o.last().(type) {
 		case *DescriptorProto:
 			fd.Type = NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_MESSAGE)
 		case *EnumDescriptorProto:

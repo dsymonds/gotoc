@@ -15,7 +15,7 @@ import (
 	"goprotobuf.googlecode.com/hg/proto"
 )
 
-func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, os.Error) {
+func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, error) {
 	fds := &FileDescriptorSet{
 		File: make([]*FileDescriptorProto, 0, len(filenames)),
 	}
@@ -69,7 +69,7 @@ func resolveFilename(filename string, paths []string) string {
 	for _, p := range paths {
 		full := path.Join(p, filename)
 		fi, err := os.Stat(full)
-		if err == nil && fi.IsRegular() {
+		if err == nil && !fi.IsDir() {
 			return full
 		}
 	}
@@ -91,7 +91,9 @@ func (sf *sortableFiles) Swap(i, j int) {
 	sf.files[i], sf.files[j] = sf.files[j], sf.files[i]
 }
 func (sf *sortableFiles) Less(i, j int) bool {
-	if i == j { return false }
+	if i == j {
+		return false
+	}
 
 	// Determine whether there is a dependency chain from j to i.
 	for _, dep := range sf.files[j].Dependency {
@@ -109,7 +111,7 @@ type parseError struct {
 	offset  int // 0-based byte offset from start of input
 }
 
-func (pe *parseError) String() string {
+func (pe *parseError) Error() string {
 	if pe == nil {
 		return "<nil>"
 	}
@@ -263,11 +265,11 @@ func (p *parser) readEnum(e *EnumDescriptorProto) *parseError {
 			return tok.err
 		}
 		// TODO: check that tok.value is a valid enum value number.
-		num, err := atoi32(tok.value)
+		num, err := strconv.ParseInt(tok.value, 10, 32)
 		if err != nil {
 			return p.error("bad enum number %q: %v", tok.value, err)
 		}
-		ev.Number = proto.Int32(num)
+		ev.Number = proto.Int32(int32(num))
 
 		if err := p.readToken(";"); err != nil {
 			return err
@@ -412,18 +414,18 @@ func (p *parser) readTagNumber(num *int32) *parseError {
 	if tok.err != nil {
 		return tok.err
 	}
-	n, err := atoi32(tok.value)
+	n, err := strconv.ParseInt(tok.value, 10, 32)
 	if err != nil {
 		return p.error("bad field number %q: %v", tok.value, err)
 	}
-	if n < 1 || n >= (1 << 29) {
+	if n < 1 || n >= (1<<29) {
 		return p.error("field number %v out of range", n)
 	}
 	// 19000-19999 are reserved.
 	if n >= 19000 && n <= 19999 {
 		return p.error("field number %v in reserved range [19000, 19999]", n)
 	}
-	*num = n
+	*num = int32(n)
 	return nil
 }
 
@@ -563,7 +565,7 @@ func (p *parser) error(format string, a ...interface{}) *parseError {
 
 func isWhitespace(c byte) bool {
 	// TODO: do more accurately
-	return unicode.IsSpace(int(c))
+	return unicode.IsSpace(rune(c))
 }
 
 // Numbers and identifiers are matched by [-+._A-Za-z0-9]
@@ -579,15 +581,4 @@ func isIdentOrNumberChar(c byte) bool {
 		return true
 	}
 	return false
-}
-
-func atoi32(s string) (int32, os.Error) {
-	x, err := strconv.Atoi64(s)
-	if err != nil {
-		return 0, err
-	}
-	if x < (-1 << 31) || x > (1<<31 - 1) {
-		return 0, os.NewError("out of int32 range")
-	}
-	return int32(x), nil
 }

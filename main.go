@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
-	"exec"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -22,8 +22,8 @@ var (
 	helpShort = flag.Bool("h", false, "Show usage text (same as --help).")
 	helpLong  = flag.Bool("help", false, "Show usage text (same as -h).")
 
-	importPath = flag.String("import_path", ".", "Comma-separated list of paths to search for imports.")
-	pluginBinary = flag.String("plugin", "protoc-gen-go", "The code generator plugin to use.")
+	importPath     = flag.String("import_path", ".", "Comma-separated list of paths to search for imports.")
+	pluginBinary   = flag.String("plugin", "protoc-gen-go", "The code generator plugin to use.")
 	descriptorOnly = flag.Bool("descriptor_only", false, "Whether to print out only the FileDescriptorSet.")
 )
 
@@ -35,7 +35,7 @@ func fullPath(binary string, paths []string) string {
 	for _, p := range paths {
 		full := path.Join(p, binary)
 		fi, err := os.Stat(full)
-		if err == nil && fi.IsRegular() {
+		if err == nil && !fi.IsDir() {
 			return full
 		}
 	}
@@ -71,7 +71,7 @@ func main() {
 	cgRequest := &plugin.CodeGeneratorRequest{
 		FileToGenerate: flag.Args(),
 		// TODO: proto_file should be topologically sorted (bottom-up)
-		ProtoFile:      fds.File,
+		ProtoFile: fds.File,
 	}
 	buf, err := proto.Marshal(cgRequest)
 	if err != nil {
@@ -86,8 +86,8 @@ func main() {
 
 	// Run the plugin subprocess.
 	cmd := &exec.Cmd{
-		Path: pluginPath,
-		Stdin: bytes.NewBuffer(buf),
+		Path:   pluginPath,
+		Stdin:  bytes.NewBuffer(buf),
 		Stderr: os.Stderr,
 	}
 	buf, err = cmd.Output()
