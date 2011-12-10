@@ -15,7 +15,7 @@ import (
 func main() {
 	flag.Parse()
 	if flag.NArg() != 2 {
-		log.Exitf("usage: %v <proto1> <proto2>", os.Args[0])
+		log.Fatalf("usage: %v <proto1> <proto2>", os.Args[0])
 	}
 
 	a, b := mustLoad(flag.Arg(0)), mustLoad(flag.Arg(1))
@@ -25,11 +25,11 @@ func main() {
 func mustLoad(filename string) *FileDescriptorSet {
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Exitf("Failed reading %v: %v", filename, err)
+		log.Fatalf("Failed reading %v: %v", filename, err)
 	}
 	fds := new(FileDescriptorSet)
 	if err := proto.UnmarshalText(string(buf), fds); err != nil {
-		log.Exitf("Failed parsing %v: %v", filename, err)
+		log.Fatalf("Failed parsing %v: %v", filename, err)
 	}
 	return fds
 }
@@ -78,7 +78,7 @@ func cmpSets(a, b *FileDescriptorSet) {
 
 func cmpFiles(a, b *FileDescriptorProto) {
 	if ap, bp := proto.GetString(a.Package), proto.GetString(b.Package); ap != bp {
-		log.Exitf("Package name mismatch in %v: %q vs. %q", *a.Name, ap, bp)
+		log.Fatalf("Package name mismatch in %v: %q vs. %q", *a.Name, ap, bp)
 	}
 
 	match := true
@@ -93,12 +93,12 @@ func cmpFiles(a, b *FileDescriptorProto) {
 		}
 	}
 	if !match {
-		log.Exitf("Different dependency list in %v", *a.Name)
+		log.Fatalf("Different dependency list in %v", *a.Name)
 	}
 
 	// TODO: this should be order-independent.
 	if len(a.MessageType) != len(b.MessageType) {
-		log.Exitf("Different number of messages in %v", *a.Name)
+		log.Fatalf("Different number of messages in %v", *a.Name)
 	}
 	for i, msgA := range a.MessageType {
 		cmpMessages(msgA, b.MessageType[i])
@@ -110,12 +110,12 @@ func cmpFiles(a, b *FileDescriptorProto) {
 func cmpMessages(a, b *DescriptorProto) {
 	// TODO: this check shouldn't be necessary from here.
 	if *a.Name != *b.Name {
-		log.Exitf("Different message names: %q vs. %q", *a.Name, *b.Name)
+		log.Fatalf("Different message names: %q vs. %q", *a.Name, *b.Name)
 	}
 
 	// TODO: this should be order-independent.
 	if len(a.Field) != len(b.Field) {
-		log.Exitf("Different number of fields in message %v: %d vs. %d", *a.Name, len(a.Field), len(b.Field))
+		log.Fatalf("Different number of fields in message %v: %d vs. %d", *a.Name, len(a.Field), len(b.Field))
 	}
 	for i, fA := range a.Field {
 		cmpFields(fA, b.Field[i])
@@ -123,7 +123,7 @@ func cmpMessages(a, b *DescriptorProto) {
 
 	// TODO: this should be order-independent too.
 	if len(a.NestedType) != len(b.NestedType) {
-		log.Exitf("Different number of nested messages in message %v: %d vs. %d",
+		log.Fatalf("Different number of nested messages in message %v: %d vs. %d",
 			*a.Name, len(a.NestedType), len(b.NestedType))
 	}
 	for i, msgA := range a.NestedType {
@@ -136,22 +136,22 @@ func cmpMessages(a, b *DescriptorProto) {
 func cmpFields(a, b *FieldDescriptorProto) {
 	// TODO: this check shouldn't be necessary from here.
 	if *a.Name != *b.Name {
-		log.Exitf("Different field names: %q vs. %q", *a.Name, *b.Name)
+		log.Fatalf("Different field names: %q vs. %q", *a.Name, *b.Name)
 	}
 	if *a.Number != *b.Number {
-		log.Exitf("Different field number for %v: %d vs. %d", *a.Name, *a.Number, *b.Number)
+		log.Fatalf("Different field number for %v: %d vs. %d", *a.Name, *a.Number, *b.Number)
 	}
 	if *a.Label != *b.Label {
-		log.Exitf("Different field labels for %v: %v vs. %v", *a.Name,
+		log.Fatalf("Different field labels for %v: %v vs. %v", *a.Name,
 			FieldDescriptorProto_Label_name[int32(*a.Label)],
 			FieldDescriptorProto_Label_name[int32(*b.Label)])
 	}
 	if *a.Type != *b.Type {
-		log.Exitf("Different field types for %v: %v vs. %v", *a.Name,
+		log.Fatalf("Different field types for %v: %v vs. %v", *a.Name,
 			FieldDescriptorProto_Type_name[int32(*a.Type)],
 			FieldDescriptorProto_Type_name[int32(*b.Type)])
 	}
 	if aTN, bTN := proto.GetString(a.TypeName), proto.GetString(b.TypeName); aTN != bTN {
-		log.Exitf("Different field type_name for %v: %q vs. %q", *a.Name, aTN, bTN)
+		log.Fatalf("Different field type_name for %v: %q vs. %q", *a.Name, aTN, bTN)
 	}
 }
