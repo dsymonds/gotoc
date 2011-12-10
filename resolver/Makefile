@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=gotoc/resolver
+TARG=github.com/dsymonds/gotoc/resolver
 GOFILES=\
 	resolver.go\
 

@@ -13,8 +13,8 @@ import (
 	plugin "goprotobuf.googlecode.com/hg/compiler/plugin"
 	"goprotobuf.googlecode.com/hg/proto"
 
-	"gotoc/parser"
-	"gotoc/resolver"
+	"github.com/dsymonds/gotoc/parser"
+	"github.com/dsymonds/gotoc/resolver"
 )
 
 var (

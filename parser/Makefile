@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=gotoc/parser
+TARG=github.com/dsymonds/gotoc/parser
 GOFILES=\
 	parser.go\
 
