@@ -8,8 +8,14 @@ DEPS=parser resolver
 
 include $(GOROOT)/src/Make.cmd
 
+clean:
+	make -C parser clean
+	make -C resolver clean
+	make -C testdata clean
+
 test:
 	make -C parser test
+	#make -C resolver test
 	make -C testdata test
 
 minitest: $(TARG)
