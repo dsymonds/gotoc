@@ -121,6 +121,8 @@ func (pe *parseError) Error() string {
 	return fmt.Sprintf("line %d: %v", pe.line, pe.message)
 }
 
+var eof = &parseError{message: "EOF"}
+
 type token struct {
 	value        string
 	err          *parseError
@@ -150,7 +152,9 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 	// Parse the top-level things.
 	for !p.done {
 		tok := p.next()
-		if tok.err != nil {
+		if tok.err == eof {
+			break
+		} else if tok.err != nil {
 			return tok.err
 		}
 		switch tok.value {
@@ -509,6 +513,7 @@ func (p *parser) next() *token {
 		p.advance()
 		if p.done {
 			p.cur.value = ""
+			p.cur.err = eof
 		}
 	}
 	//log.Printf("parser·next(): returning %q [err: %v]", p.cur.value, p.cur.err)
