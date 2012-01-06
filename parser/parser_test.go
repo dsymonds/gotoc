@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
-	"goprotobuf.googlecode.com/hg/proto"
+	. "code.google.com/p/goprotobuf/compiler/descriptor"
+	"code.google.com/p/goprotobuf/proto"
 )
 
 // tryParse attempts to parse the input, and verifies that it matches

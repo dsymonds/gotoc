@@ -10,8 +10,8 @@ import (
 	"path"
 	"strings"
 
-	plugin "goprotobuf.googlecode.com/hg/compiler/plugin"
-	"goprotobuf.googlecode.com/hg/proto"
+	plugin "code.google.com/p/goprotobuf/compiler/plugin"
+	"code.google.com/p/goprotobuf/proto"
 
 	"github.com/dsymonds/gotoc/parser"
 	"github.com/dsymonds/gotoc/resolver"

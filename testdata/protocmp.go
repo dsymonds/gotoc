@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
-	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
-	"goprotobuf.googlecode.com/hg/proto"
+	. "code.google.com/p/goprotobuf/compiler/descriptor"
+	"code.google.com/p/goprotobuf/proto"
 )
 
 func main() {

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode"
 
-	. "goprotobuf.googlecode.com/hg/compiler/descriptor"
-	"goprotobuf.googlecode.com/hg/proto"
+	. "code.google.com/p/goprotobuf/compiler/descriptor"
+	"code.google.com/p/goprotobuf/proto"
 )
 
 func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, error) {
