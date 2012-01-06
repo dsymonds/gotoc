@@ -1,0 +1,13 @@
+file: <
+  name: "3.proto"
+  message_type: <
+    name: "A"
+    field: <
+      name: "str"
+      number: 3
+      label: LABEL_OPTIONAL
+      type: TYPE_STRING
+      default_value: "boo"
+    >
+  >
+>

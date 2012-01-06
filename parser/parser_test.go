@@ -51,6 +51,14 @@ var parseTests = []parseTest{
 		 }`,
 	},
 	{
+		"FieldDefaults",
+		"message TestMessage {\n  required string foo = 1 [default=\"blah\"]; }\n",
+		`message_type {
+		  name: "TestMessage"
+		  field { name:"foo" label:LABEL_REQUIRED type:TYPE_STRING number:1 default_value:"blah" }
+		}`,
+	},
+	{
 		"NestedMessage",
 		"message TestMessage {\n  message Nested {}\n  optional Nested test_nested = 1;\n  }\n",
 		`message_type { name: "TestMessage" nested_type { name: "Nested" } field { name:"test_nested" label:LABEL_OPTIONAL number:1 type_name: "Nested" } }`,

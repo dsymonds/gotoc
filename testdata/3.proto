@@ -1,0 +1,8 @@
+// Default values.
+
+message A {
+  // TODO: uncomment these when non-string default parsing is implemented.
+  //optional int32 int = 1 [default=7];
+  //optional bool boolean = 2 [default=true];
+  optional string str = 3 [default="boo"];
+}

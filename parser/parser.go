@@ -400,7 +400,16 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 		return err
 	}
 
-	// TODO: default value, options
+	tok = p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	p.back()
+	if tok.value == "[" {
+		if err := p.readFieldOptions(f); err != nil {
+			return err
+		}
+	}
 
 	if err := p.readToken(";"); err != nil {
 		return err
@@ -426,6 +435,42 @@ func (p *parser) readTagNumber(num *int32) *parseError {
 		return p.error("field number %v in reserved range [19000, 19999]", n)
 	}
 	*num = int32(n)
+	return nil
+}
+
+func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
+	if err := p.readToken("["); err != nil {
+		return err
+	}
+
+	// TODO: support more than just default.
+	if err := p.readToken("default"); err != nil {
+		return err
+	}
+	if err := p.readToken("="); err != nil {
+		return err
+	}
+
+	if f.Type == nil {
+		// TODO: enum should be supported.
+		return p.error("default value not allowed for enum, message or group fields")
+	}
+	switch *f.Type {
+	case FieldDescriptorProto_TYPE_STRING:
+		tok, err := p.readString()
+		if err != nil {
+			return err
+		}
+		f.DefaultValue = proto.String(tok.unquoted)
+	// TODO: more types
+	default:
+		return p.error("default value for %v not implemented yet", *f.Type)
+	}
+
+	if err := p.readToken("]"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -482,7 +527,7 @@ func (p *parser) advance() {
 	p.cur.offset, p.cur.line = p.offset, p.line
 	switch p.s[0] {
 	// TODO: more cases, like punctuation.
-	case ';', '{', '}', '=':
+	case ';', '{', '}', '=', '[', ']':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
 	case '"':
