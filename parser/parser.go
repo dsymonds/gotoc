@@ -491,14 +491,42 @@ func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
 		return err
 	}
 
-	// TODO: support more than just default.
-	if err := p.readToken("default"); err != nil {
-		return err
+	// TODO: Support multiple field options.
+
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
 	}
+	key := tok.value
+
 	if err := p.readToken("="); err != nil {
 		return err
 	}
 
+	switch key {
+	case "default":
+		if err := p.readFieldDefault(f); err != nil {
+			return err
+		}
+	case "packed":
+		b, err := p.readBool()
+		if err != nil {
+			return err
+		}
+		if f.Options == nil {
+			f.Options = new(FieldOptions)
+		}
+		f.Options.Packed = proto.Bool(b)
+	}
+
+	if err := p.readToken("]"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *parser) readFieldDefault(f *FieldDescriptorProto) *parseError {
 	if f.Type == nil {
 		// We don't know if this is an enum, message or group field. Assume it's an enum.
 		tok := p.next()
@@ -506,8 +534,9 @@ func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
 			return tok.err
 		}
 		f.DefaultValue = proto.String(tok.value)
-		goto closeBracket
+		return nil
 	}
+
 	switch *f.Type {
 	case FieldDescriptorProto_TYPE_STRING:
 		tok, err := p.readString()
@@ -516,22 +545,14 @@ func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
 		}
 		f.DefaultValue = proto.String(tok.unquoted)
 	case FieldDescriptorProto_TYPE_BOOL:
-		tok := p.next()
-		if tok.err != nil {
-			return tok.err
+		b, err := p.readBool()
+		if err != nil {
+			return err
 		}
-		if tok.value != "true" && tok.value != "false" {
-			return p.error("default value %q invalid for bool field", tok.value)
-		}
-		f.DefaultValue = proto.String(tok.value)
+		f.DefaultValue = proto.String(fmt.Sprint(b))
 	// TODO: more types
 	default:
 		return p.error("default value for %v not implemented yet", *f.Type)
-	}
-
-closeBracket:
-	if err := p.readToken("]"); err != nil {
-		return err
 	}
 
 	return nil
@@ -546,6 +567,19 @@ func (p *parser) readString() (*token, *parseError) {
 		return nil, p.error("expected string, found %q", tok.value)
 	}
 	return tok, nil
+}
+
+func (p *parser) readBool() (bool, *parseError) {
+	tok := p.next()
+	if tok.err != nil {
+		return false, tok.err
+	}
+	if tok.value == "true" {
+		return true, nil
+	} else if tok.value == "false" {
+		return false, nil
+	}
+	return false, p.error("expected bool, found %q", tok.value)
 }
 
 func (p *parser) readToken(expected string) *parseError {
