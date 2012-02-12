@@ -6,6 +6,8 @@ MAX=100
 GOTOC=../gotoc
 PROTOCMP=./protocmp
 
+go build -o protocmp protocmp.go
+
 failures=0
 for ((i=1; $i <= $MAX; i=$((i+1)))); do
   if [ ! -f $i.proto ]; then continue; fi
