@@ -497,8 +497,13 @@ func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
 	}
 
 	if f.Type == nil {
-		// TODO: enum should be supported.
-		return p.error("default value not allowed for enum, message or group fields")
+		// We don't know if this is an enum, message or group field. Assume it's an enum.
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		f.DefaultValue = proto.String(tok.value)
+		goto closeBracket
 	}
 	switch *f.Type {
 	case FieldDescriptorProto_TYPE_STRING:
@@ -521,6 +526,7 @@ func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
 		return p.error("default value for %v not implemented yet", *f.Type)
 	}
 
+closeBracket:
 	if err := p.readToken("]"); err != nil {
 		return err
 	}

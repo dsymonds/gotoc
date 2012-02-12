@@ -52,10 +52,11 @@ var parseTests = []parseTest{
 	},
 	{
 		"FieldDefaults",
-		"message TestMessage {\n  required string foo = 1 [default=\"blah\"]; }\n",
+		"message TestMessage {\n  required string foo = 1 [default=\"blah\"];\n  required Foo    foo = 1 [default=FOO  ];\n}\n",
 		`message_type {
 		  name: "TestMessage"
 		  field { name:"foo" label:LABEL_REQUIRED type:TYPE_STRING number:1 default_value:"blah" }
+		  field { name:"foo" label:LABEL_REQUIRED type_name:"Foo" number:1 default_value:"FOO" }
 		}`,
 	},
 	{
