@@ -334,6 +334,8 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 		case "}":
 			// end of message
 			return nil
+		case ";":
+			// backward compatibility: permit ";" after enum/message.
 		default:
 			return p.error("unexpected token %q while parsing message", tok.value)
 		}
