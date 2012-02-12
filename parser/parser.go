@@ -433,6 +433,9 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 }
 
 func (p *parser) readExtensionRange(er *DescriptorProto_ExtensionRange) *parseError {
+	// TODO: This only parses the simple form ("extensions X to Y;"),
+	// but more complex forms are permitted ("extensions 2, 15, 9 to 11, 100 to max, 3").
+
 	if err := p.readToken("extensions"); err != nil {
 		return err
 	}
