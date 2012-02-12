@@ -24,7 +24,7 @@ func tryParse(t *testing.T, input, output string) {
 	}
 
 	if !reflect.DeepEqual(expected, actual) {
-		t.Errorf("Mismatch! Expected:\n%v\nActual\n%v",
+		t.Errorf("Mismatch!\nExpected:\n%v\nActual\n%v",
 			proto.CompactTextString(expected), proto.CompactTextString(actual))
 	}
 }
@@ -67,6 +67,11 @@ var parseTests = []parseTest{
 		"NestedEnum",
 		"message TestMessage {\n  enum NestedEnum {}\n  optional NestedEnum test_enum = 1;\n  }\n",
 		`message_type { name: "TestMessage" enum_type { name: "NestedEnum" } field { name:"test_enum" label:LABEL_OPTIONAL number:1 type_name: "NestedEnum" } }`,
+	},
+	{
+		"ExtensionRange",
+		"message TestMessage {\n  extensions 10 to 19;\n  extensions 30 to max;\n}\n",
+		`message_type { name: "TestMessage" extension_range { start:10 end:20 } extension_range { start:30 end:536870912 } }`,
 	},
 	{
 		"EnumValues",

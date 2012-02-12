@@ -330,6 +330,14 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 			if err := p.readMessage(msg); err != nil {
 				return err
 			}
+		case "extensions":
+			// extension range
+			p.back()
+			er := new(DescriptorProto_ExtensionRange)
+			d.ExtensionRange = append(d.ExtensionRange, er)
+			if err := p.readExtensionRange(er); err != nil {
+				return err
+			}
 		// TODO: more message contents
 		case "}":
 			// end of message
@@ -402,7 +410,7 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 	}
 
 	f.Number = new(int32)
-	if err := p.readTagNumber(f.Number); err != nil {
+	if err := p.readTagNumber(f.Number, false); err != nil {
 		return err
 	}
 
@@ -424,10 +432,41 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 	return nil
 }
 
-func (p *parser) readTagNumber(num *int32) *parseError {
+func (p *parser) readExtensionRange(er *DescriptorProto_ExtensionRange) *parseError {
+	if err := p.readToken("extensions"); err != nil {
+		return err
+	}
+
+	er.Start = new(int32)
+	if err := p.readTagNumber(er.Start, false); err != nil {
+		return err
+	}
+
+	if err := p.readToken("to"); err != nil {
+		return err
+	}
+
+	er.End = new(int32)
+	if err := p.readTagNumber(er.End, true); err != nil {
+		return err
+	}
+	(*er.End)++ // end is exclusive
+
+	if err := p.readToken(";"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *parser) readTagNumber(num *int32, allowMax bool) *parseError {
 	tok := p.next()
 	if tok.err != nil {
 		return tok.err
+	}
+	if allowMax && tok.value == "max" {
+		*num = 1<<29 - 1
+		return nil
 	}
 	n, err := strconv.ParseInt(tok.value, 10, 32)
 	if err != nil {
