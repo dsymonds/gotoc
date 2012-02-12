@@ -191,6 +191,14 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			if err := p.readToken(";"); err != nil {
 				return err
 			}
+		case "option":
+			p.back()
+			if fd.Options == nil {
+				fd.Options = new(FileOptions)
+			}
+			if err := p.readFileOption(fd.Options); err != nil {
+				return err
+			}
 		case "import":
 			tok, err := p.readString()
 			if err != nil {
@@ -225,6 +233,49 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 	}
 
 	// TODO: more
+
+	return nil
+}
+
+func (p *parser) readFileOption(o *FileOptions) *parseError {
+	if err := p.readToken("option"); err != nil {
+		return err
+	}
+
+	uo := new(UninterpretedOption)
+	o.UninterpretedOption = append(o.UninterpretedOption, uo)
+
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	// TODO: Support extension segments.
+	for _, part := range strings.Split(tok.value, ".") {
+		uo.Name = append(uo.Name, &UninterpretedOption_NamePart{
+			NamePart:    proto.String(part),
+			IsExtension: proto.Bool(false),
+		})
+	}
+
+	if err := p.readToken("="); err != nil {
+		return err
+	}
+
+	tok = p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	// TODO: The tokeniser should know about the different types.
+	// This doesn't handle the numeric types.
+	if strings.HasPrefix(tok.value, `"`) {
+		uo.StringValue = []byte(tok.unquoted)
+	} else {
+		uo.IdentifierValue = proto.String(tok.value)
+	}
+
+	if err := p.readToken(";"); err != nil {
+		return err
+	}
 
 	return nil
 }

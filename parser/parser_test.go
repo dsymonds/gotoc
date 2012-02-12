@@ -80,6 +80,11 @@ var parseTests = []parseTest{
 		`enum_type { name: "TestEnum" value { name:"FOO" number:13 } value { name:"BAR" number:-10 } value { name:"BAZ" number:500 } }`,
 	},
 	{
+		"ParseImport",
+		"import \"foo/bar/baz.proto\";\n",
+		`dependency: "foo/bar/baz.proto"`,
+	},
+	{
 		"ParsePackage",
 		"package foo.bar.baz;\n",
 		`package: "foo.bar.baz"`,
@@ -90,9 +95,9 @@ var parseTests = []parseTest{
 		`package: "foo.bar.baz"`,
 	},
 	{
-		"ParseImport",
-		"import \"foo/bar/baz.proto\";\n",
-		`dependency: "foo/bar/baz.proto"`,
+		"ParseFileOptions",
+		"option java_package = \"com.google.foo\";\noption optimize_for = CODE_SIZE;",
+		`options { uninterpreted_option { name { name_part: "java_package" is_extension: false } string_value: "com.google.foo"} uninterpreted_option { name { name_part: "optimize_for" is_extension: false } identifier_value: "CODE_SIZE" } }`,
 	},
 }
 
