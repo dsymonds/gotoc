@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -63,9 +64,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Println("-----")
-	proto.MarshalText(os.Stdout, fds)
-	fmt.Println("-----")
+	//fmt.Println("-----")
+	//proto.MarshalText(os.Stdout, fds)
+	//fmt.Println("-----")
 
 	// Prepare request.
 	cgRequest := &plugin.CodeGeneratorRequest{
@@ -103,12 +104,15 @@ func main() {
 
 	// TODO: check cgResponse.Error
 
-	// TODO: write files
 	for _, f := range cgResponse.File {
-		fmt.Printf("--[ %v ]--\n", proto.GetString(f.Name))
-		fmt.Println(proto.GetString(f.Content))
+		// TODO: If f.Name is nil, the content should be appended to the previous file.
+		if f.Name == nil || f.Content == nil {
+			log.Fatal("Malformed CG response")
+		}
+		if err := ioutil.WriteFile(*f.Name, []byte(*f.Content), 0644); err != nil {
+			log.Fatalf("Failed writing output file: %v", err)
+		}
 	}
-	fmt.Println("-----")
 }
 
 func usage() {
