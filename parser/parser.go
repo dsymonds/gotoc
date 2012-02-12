@@ -468,6 +468,15 @@ func (p *parser) readFieldOptions(f *FieldDescriptorProto) *parseError {
 			return err
 		}
 		f.DefaultValue = proto.String(tok.unquoted)
+	case FieldDescriptorProto_TYPE_BOOL:
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		if tok.value != "true" && tok.value != "false" {
+			return p.error("default value %q invalid for bool field", tok.value)
+		}
+		f.DefaultValue = proto.String(tok.value)
 	// TODO: more types
 	default:
 		return p.error("default value for %v not implemented yet", *f.Type)
