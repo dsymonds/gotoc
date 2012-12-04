@@ -11,8 +11,8 @@ import (
 	"path"
 	"strings"
 
-	plugin "code.google.com/p/goprotobuf/compiler/plugin"
 	"code.google.com/p/goprotobuf/proto"
+	plugin "code.google.com/p/goprotobuf/protoc-gen-go/plugin"
 
 	"github.com/dsymonds/gotoc/parser"
 	"github.com/dsymonds/gotoc/resolver"

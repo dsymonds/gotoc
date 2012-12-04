@@ -9,8 +9,8 @@ import (
 
 	"strings"
 
-	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 	"code.google.com/p/goprotobuf/proto"
+	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 )
 
 func ResolveSymbols(fds *FileDescriptorSet) error {
@@ -75,7 +75,7 @@ func (s *scope) findName(name string) []interface{} {
 	case *FileDescriptorSet:
 		ret := []interface{}{}
 		for _, fd := range ov.File {
-			if proto.GetString(fd.Package) == "" {
+			if fd.GetPackage() == "" {
 				// No package; match on message/enum names
 				fs := s.dup()
 				fs.push(fd)
@@ -170,9 +170,9 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) error {
 		}
 		switch o.last().(type) {
 		case *DescriptorProto:
-			fd.Type = NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_MESSAGE)
+			fd.Type = FieldDescriptorProto_TYPE_MESSAGE.Enum()
 		case *EnumDescriptorProto:
-			fd.Type = NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_ENUM)
+			fd.Type = FieldDescriptorProto_TYPE_ENUM.Enum()
 		}
 		//log.Printf("(resolved %q to %q)", *fd.TypeName, o.fullName())
 		fd.TypeName = proto.String(o.fullName())

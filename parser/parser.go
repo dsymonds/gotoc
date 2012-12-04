@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode"
 
-	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 	"code.google.com/p/goprotobuf/proto"
+	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 )
 
 func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, error) {
@@ -404,28 +404,28 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 }
 
 var fieldLabelMap = map[string]*FieldDescriptorProto_Label{
-	"required": NewFieldDescriptorProto_Label(FieldDescriptorProto_LABEL_REQUIRED),
-	"optional": NewFieldDescriptorProto_Label(FieldDescriptorProto_LABEL_OPTIONAL),
-	"repeated": NewFieldDescriptorProto_Label(FieldDescriptorProto_LABEL_REPEATED),
+	"required": FieldDescriptorProto_LABEL_REQUIRED.Enum(),
+	"optional": FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
+	"repeated": FieldDescriptorProto_LABEL_REPEATED.Enum(),
 }
 
 var fieldTypeMap = map[string]*FieldDescriptorProto_Type{
 	// Only basic types; enum, message and group are handled differently.
-	"double":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_DOUBLE),
-	"float":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FLOAT),
-	"int64":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_INT64),
-	"uint64":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_UINT64),
-	"int32":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_INT32),
-	"fixed64":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FIXED64),
-	"fixed32":  NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_FIXED32),
-	"bool":     NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_BOOL),
-	"string":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_STRING),
-	"bytes":    NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_BYTES),
-	"uint32":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_UINT32),
-	"sfixed32": NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SFIXED32),
-	"sfixed64": NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SFIXED64),
-	"sint32":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SINT32),
-	"sint64":   NewFieldDescriptorProto_Type(FieldDescriptorProto_TYPE_SINT64),
+	"double":   FieldDescriptorProto_TYPE_DOUBLE.Enum(),
+	"float":    FieldDescriptorProto_TYPE_FLOAT.Enum(),
+	"int64":    FieldDescriptorProto_TYPE_INT64.Enum(),
+	"uint64":   FieldDescriptorProto_TYPE_UINT64.Enum(),
+	"int32":    FieldDescriptorProto_TYPE_INT32.Enum(),
+	"fixed64":  FieldDescriptorProto_TYPE_FIXED64.Enum(),
+	"fixed32":  FieldDescriptorProto_TYPE_FIXED32.Enum(),
+	"bool":     FieldDescriptorProto_TYPE_BOOL.Enum(),
+	"string":   FieldDescriptorProto_TYPE_STRING.Enum(),
+	"bytes":    FieldDescriptorProto_TYPE_BYTES.Enum(),
+	"uint32":   FieldDescriptorProto_TYPE_UINT32.Enum(),
+	"sfixed32": FieldDescriptorProto_TYPE_SFIXED32.Enum(),
+	"sfixed64": FieldDescriptorProto_TYPE_SFIXED64.Enum(),
+	"sint32":   FieldDescriptorProto_TYPE_SINT32.Enum(),
+	"sint64":   FieldDescriptorProto_TYPE_SINT64.Enum(),
 }
 
 func (p *parser) readField(f *FieldDescriptorProto) *parseError {
