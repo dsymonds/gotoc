@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	. "code.google.com/p/goprotobuf/compiler/descriptor"
+	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 	"code.google.com/p/goprotobuf/proto"
 )
 
@@ -77,7 +77,7 @@ func cmpSets(a, b *FileDescriptorSet) {
 }
 
 func cmpFiles(a, b *FileDescriptorProto) {
-	if ap, bp := proto.GetString(a.Package), proto.GetString(b.Package); ap != bp {
+	if ap, bp := a.GetPackage(), b.GetPackage(); ap != bp {
 		log.Fatalf("Package name mismatch in %v: %q vs. %q", *a.Name, ap, bp)
 	}
 
@@ -151,7 +151,7 @@ func cmpFields(a, b *FieldDescriptorProto) {
 			FieldDescriptorProto_Type_name[int32(*a.Type)],
 			FieldDescriptorProto_Type_name[int32(*b.Type)])
 	}
-	if aTN, bTN := proto.GetString(a.TypeName), proto.GetString(b.TypeName); aTN != bTN {
+	if aTN, bTN := a.GetTypeName(), b.GetTypeName(); aTN != bTN {
 		log.Fatalf("Different field type_name for %v: %q vs. %q", *a.Name, aTN, bTN)
 	}
 }

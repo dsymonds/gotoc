@@ -9,7 +9,7 @@ import (
 
 	"strings"
 
-	. "code.google.com/p/goprotobuf/compiler/descriptor"
+	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 	"code.google.com/p/goprotobuf/proto"
 )
 
