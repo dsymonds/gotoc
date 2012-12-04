@@ -5,13 +5,15 @@ package resolver
 
 import (
 	"fmt"
-	//"log"
+	"log"
 
 	"strings"
 
 	"code.google.com/p/goprotobuf/proto"
 	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 )
+
+var _ = log.Print
 
 func ResolveSymbols(fds *FileDescriptorSet) error {
 	r := &resolver{
@@ -160,7 +162,11 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) error {
 	// Resolve fields.
 	for _, fd := range d.Field {
 		if fd.Type != nil {
-			if *fd.Type != FieldDescriptorProto_TYPE_MESSAGE && *fd.Type != FieldDescriptorProto_TYPE_ENUM {
+			switch *fd.Type {
+			case FieldDescriptorProto_TYPE_MESSAGE,
+				FieldDescriptorProto_TYPE_GROUP,
+				FieldDescriptorProto_TYPE_ENUM:
+			default:
 				continue
 			}
 		}
@@ -168,11 +174,13 @@ func (r *resolver) resolveMessage(s *scope, d *DescriptorProto) error {
 		if o == nil {
 			return fmt.Errorf("failed to resolve name %q", *fd.TypeName)
 		}
-		switch o.last().(type) {
-		case *DescriptorProto:
-			fd.Type = FieldDescriptorProto_TYPE_MESSAGE.Enum()
-		case *EnumDescriptorProto:
-			fd.Type = FieldDescriptorProto_TYPE_ENUM.Enum()
+		if fd.Type == nil { // TYPE_GROUP will already have this set.
+			switch o.last().(type) {
+			case *DescriptorProto:
+				fd.Type = FieldDescriptorProto_TYPE_MESSAGE.Enum()
+			case *EnumDescriptorProto:
+				fd.Type = FieldDescriptorProto_TYPE_ENUM.Enum()
+			}
 		}
 		//log.Printf("(resolved %q to %q)", *fd.TypeName, o.fullName())
 		fd.TypeName = proto.String(o.fullName())

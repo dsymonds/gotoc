@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 	"io/ioutil"
-	//"log"
+	"log"
 	"os"
 	"path"
 	"sort"
@@ -14,6 +14,8 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
 )
+
+var _ = log.Print
 
 func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, error) {
 	fds := &FileDescriptorSet{
@@ -350,7 +352,16 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 		return err
 	}
 
-	// Parse message fields and other things inside messages.
+	if err := p.readMessageContents(d, false); err != nil {
+		return err
+	}
+
+	return p.readToken("}")
+}
+
+func (p *parser) readMessageContents(d *DescriptorProto, group bool) *parseError {
+	// Parse message fields and other things inside a message/group.
+	// TODO: A bunch of this stuff is not allowed inside groups. Catch them.
 	for !p.done {
 		tok := p.next()
 		if tok.err != nil {
@@ -362,7 +373,7 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 			p.back()
 			f := new(FieldDescriptorProto)
 			d.Field = append(d.Field, f)
-			if err := p.readField(f); err != nil {
+			if err := p.readField(d, f); err != nil {
 				return err
 			}
 		case "enum":
@@ -392,6 +403,7 @@ func (p *parser) readMessage(d *DescriptorProto) *parseError {
 		// TODO: more message contents
 		case "}":
 			// end of message
+			p.back()
 			return nil
 		case ";":
 			// backward compatibility: permit ";" after enum/message.
@@ -428,7 +440,7 @@ var fieldTypeMap = map[string]*FieldDescriptorProto_Type{
 	"sint64":   FieldDescriptorProto_TYPE_SINT64.Enum(),
 }
 
-func (p *parser) readField(f *FieldDescriptorProto) *parseError {
+func (p *parser) readField(d *DescriptorProto, f *FieldDescriptorProto) *parseError {
 	tok := p.next()
 	if tok.err != nil {
 		return tok.err
@@ -449,12 +461,23 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 		f.TypeName = proto.String(tok.value)
 	}
 
+	// Groups have special parsing below.
+	group := false
+	if tok.value == "group" {
+		group = true
+		f.Type = FieldDescriptorProto_TYPE_GROUP.Enum()
+	}
+
 	tok = p.next()
 	if tok.err != nil {
 		return tok.err
 	}
 	// TODO: check field name correctness (character set, etc.)
 	f.Name = proto.String(tok.value)
+	if group {
+		f.TypeName = f.Name
+		f.Name = proto.String(strings.ToLower(*f.Name))
+	}
 
 	if err := p.readToken("="); err != nil {
 		return err
@@ -476,7 +499,29 @@ func (p *parser) readField(f *FieldDescriptorProto) *parseError {
 		}
 	}
 
+	if group {
+		if err := p.readToken("{"); err != nil {
+			return err
+		}
+
+		g := new(DescriptorProto)
+		d.NestedType = append(d.NestedType, g)
+		g.Name = proto.String(*f.TypeName)
+		if err := p.readMessageContents(g, true); err != nil {
+			return err
+		}
+
+		if err := p.readToken("}"); err != nil {
+			return err
+		}
+	}
+
 	if err := p.readToken(";"); err != nil {
+		// Semicolon is optional after a group.
+		if group {
+			p.back()
+			return nil
+		}
 		return err
 	}
 
@@ -646,7 +691,10 @@ func (p *parser) readToken(expected string) *parseError {
 
 // Back off the parser by one token; may only be done between calls to p.next().
 func (p *parser) back() {
+	//log.Printf("parser·back(): backed %q [err: %v]", p.cur.value, p.cur.err)
+	p.done = false // in case this was the last token
 	p.backed = true
+	p.cur.err = nil // in case an error was being recovered
 }
 
 // Advances the parser and returns the new current token.

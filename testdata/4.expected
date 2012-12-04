@@ -1,0 +1,22 @@
+file: <
+  name: "4.proto"
+  message_type: <
+    name: "A"
+    field: <
+      name: "b"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_GROUP
+      type_name: ".A.B"
+    >
+    nested_type: <
+      name: "B"
+      field {
+        name: "x"
+        number: 2
+        label: LABEL_REQUIRED
+        type: TYPE_STRING
+      }
+    >
+  >
+>
