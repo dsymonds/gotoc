@@ -151,6 +151,25 @@ func newParser(s string) *parser {
 }
 
 func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
+	// Accept syntax identifier if present.
+	if err := p.readToken("syntax"); err == nil {
+		if err := p.readToken("="); err != nil {
+			return err
+		}
+		tok, err := p.readString()
+		if err != nil {
+			return err
+		}
+		if tok.unquoted != "proto2" {
+			return p.error("unknown syntax identifer %q", tok.unquoted)
+		}
+		if err := p.readToken(";"); err != nil {
+			return err
+		}
+	} else {
+		p.back()
+	}
+
 	// Parse the top-level things.
 	for !p.done {
 		tok := p.next()

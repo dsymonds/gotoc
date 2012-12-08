@@ -41,6 +41,11 @@ var parseTests = []parseTest{
 		`message_type { name: "TestMessage" field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:1 } }`,
 	},
 	{
+		"ExplicitSyntaxIdentifier",
+		"syntax = \"proto2\";\nmessage TestMessage {\n  required int32 foo = 1;\n}\n",
+		`message_type { name: "TestMessage" field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:1 } }`,
+	},
+	{
 		"SimpleFields",
 		"message TestMessage {\n  required int32 foo = 15;\n  optional int32 bar = 34;\n  repeated int32 baz = 3;\n}\n",
 		`message_type {
