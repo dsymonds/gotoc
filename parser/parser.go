@@ -50,7 +50,7 @@ func ParseFiles(filenames []string, importPaths []string) (*FileDescriptorSet, e
 			return nil, pe
 		}
 		if p.s != "" {
-			return nil, p.error("input was not all consumed")
+			return nil, p.errorf("input was not all consumed")
 		}
 
 		// Enqueue dependencies.
@@ -161,7 +161,7 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			return err
 		}
 		if tok.unquoted != "proto2" {
-			return p.error("unknown syntax identifer %q", tok.unquoted)
+			return p.errorf("unknown syntax identifer %q", tok.unquoted)
 		}
 		if err := p.readToken(";"); err != nil {
 			return err
@@ -259,7 +259,7 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 			// EOF
 			break
 		default:
-			return p.error("unknown top-level thing %q", tok.value)
+			return p.errorf("unknown top-level thing %q", tok.value)
 		}
 	}
 
@@ -353,7 +353,7 @@ func (p *parser) readEnum(e *EnumDescriptorProto) *parseError {
 		// TODO: check that tok.value is a valid enum value number.
 		num, err := strconv.ParseInt(tok.value, 10, 32)
 		if err != nil {
-			return p.error("bad enum number %q: %v", tok.value, err)
+			return p.errorf("bad enum number %q: %v", tok.value, err)
 		}
 		ev.Number = proto.Int32(int32(num))
 
@@ -362,7 +362,7 @@ func (p *parser) readEnum(e *EnumDescriptorProto) *parseError {
 		}
 	}
 
-	return p.error("unexpected end while parsing enum")
+	return p.errorf("unexpected end while parsing enum")
 }
 
 func (p *parser) readMessage(d *DescriptorProto) *parseError {
@@ -437,11 +437,11 @@ func (p *parser) readMessageContents(d *DescriptorProto, group bool) *parseError
 		case ";":
 			// backward compatibility: permit ";" after enum/message.
 		default:
-			return p.error("unexpected token %q while parsing message", tok.value)
+			return p.errorf("unexpected token %q while parsing message", tok.value)
 		}
 	}
 
-	return p.error("unexpected end while parsing message")
+	return p.errorf("unexpected end while parsing message")
 }
 
 var fieldLabelMap = map[string]*FieldDescriptorProto_Label{
@@ -477,7 +477,7 @@ func (p *parser) readField(d *DescriptorProto, f *FieldDescriptorProto) *parseEr
 	if lab, ok := fieldLabelMap[tok.value]; ok {
 		f.Label = lab
 	} else {
-		return p.error("expected required/optional/repeated, found %q", tok.value)
+		return p.errorf("expected required/optional/repeated, found %q", tok.value)
 	}
 
 	tok = p.next()
@@ -598,14 +598,14 @@ func (p *parser) readTagNumber(num *int32, allowMax bool) *parseError {
 	}
 	n, err := strconv.ParseInt(tok.value, 10, 32)
 	if err != nil {
-		return p.error("bad field number %q: %v", tok.value, err)
+		return p.errorf("bad field number %q: %v", tok.value, err)
 	}
 	if n < 1 || n >= (1<<29) {
-		return p.error("field number %v out of range", n)
+		return p.errorf("field number %v out of range", n)
 	}
 	// 19000-19999 are reserved.
 	if n >= 19000 && n <= 19999 {
-		return p.error("field number %v in reserved range [19000, 19999]", n)
+		return p.errorf("field number %v in reserved range [19000, 19999]", n)
 	}
 	*num = int32(n)
 	return nil
@@ -677,7 +677,7 @@ func (p *parser) readFieldDefault(f *FieldDescriptorProto) *parseError {
 		f.DefaultValue = proto.String(fmt.Sprint(b))
 	// TODO: more types
 	default:
-		return p.error("default value for %v not implemented yet", *f.Type)
+		return p.errorf("default value for %v not implemented yet", *f.Type)
 	}
 
 	return nil
@@ -689,7 +689,7 @@ func (p *parser) readString() (*token, *parseError) {
 		return nil, tok.err
 	}
 	if tok.value[0] != '"' {
-		return nil, p.error("expected string, found %q", tok.value)
+		return nil, p.errorf("expected string, found %q", tok.value)
 	}
 	return tok, nil
 }
@@ -704,7 +704,7 @@ func (p *parser) readBool() (bool, *parseError) {
 	} else if tok.value == "false" {
 		return false, nil
 	}
-	return false, p.error("expected bool, found %q", tok.value)
+	return false, p.errorf("expected bool, found %q", tok.value)
 }
 
 func (p *parser) readToken(expected string) *parseError {
@@ -713,7 +713,7 @@ func (p *parser) readToken(expected string) *parseError {
 		return tok.err
 	}
 	if tok.value != expected {
-		return p.error("expected %q, found %q", expected, tok.value)
+		return p.errorf("expected %q, found %q", expected, tok.value)
 	}
 	return nil
 }
@@ -767,14 +767,14 @@ func (p *parser) advance() {
 			i++
 		}
 		if i >= len(p.s) {
-			p.error("encountered EOF inside string")
+			p.errorf("encountered EOF inside string")
 			return
 		}
 		i++
 		p.cur.value, p.s = p.s[:i], p.s[i:]
 		unq, err := strconv.Unquote(p.cur.value)
 		if err != nil {
-			p.error("invalid quoted string: %v", err)
+			p.errorf("invalid quoted string: %v", err)
 		}
 		p.cur.unquoted = unq
 	default:
@@ -783,7 +783,7 @@ func (p *parser) advance() {
 			i++
 		}
 		if i == 0 {
-			p.error("unexpected byte 0x%02x (%q)", p.s[0], string(p.s[:1]))
+			p.errorf("unexpected byte 0x%02x (%q)", p.s[0], string(p.s[:1]))
 			return
 		}
 		p.cur.value, p.s = p.s[:i], p.s[i:]
@@ -823,7 +823,7 @@ func (p *parser) skipWhitespaceAndComments() {
 	}
 }
 
-func (p *parser) error(format string, a ...interface{}) *parseError {
+func (p *parser) errorf(format string, a ...interface{}) *parseError {
 	pe := &parseError{
 		message: fmt.Sprintf(format, a...),
 		line:    p.cur.line,
