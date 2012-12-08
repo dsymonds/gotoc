@@ -99,6 +99,11 @@ var parseTests = []parseTest{
 		"option java_package = \"com.google.foo\";\noption optimize_for = CODE_SIZE;",
 		`options { uninterpreted_option { name { name_part: "java_package" is_extension: false } string_value: "com.google.foo"} uninterpreted_option { name { name_part: "optimize_for" is_extension: false } identifier_value: "CODE_SIZE" } }`,
 	},
+	{
+		"ParsePublicImports",
+		"import \"foo.proto\";\nimport public \"bar.proto\";\nimport \"baz.proto\";\nimport public \"qux.proto\";\n",
+		`dependency: "foo.proto" dependency: "bar.proto" dependency: "baz.proto" dependency: "qux.proto" public_dependency: 1 public_dependency: 3`,
+	},
 }
 
 func TestParsing(t *testing.T) {

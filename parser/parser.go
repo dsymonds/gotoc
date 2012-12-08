@@ -202,11 +202,21 @@ func (p *parser) readFile(fd *FileDescriptorProto) *parseError {
 				return err
 			}
 		case "import":
+			public := false
+			if err := p.readToken("public"); err == nil {
+				public = true
+			} else {
+				p.back()
+			}
+
 			tok, err := p.readString()
 			if err != nil {
 				return err
 			}
 			fd.Dependency = append(fd.Dependency, tok.unquoted)
+			if public {
+				fd.PublicDependency = append(fd.PublicDependency, int32(len(fd.Dependency)-1))
+			}
 
 			if err := p.readToken(";"); err != nil {
 				return err
