@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path"
 	"sort"
@@ -675,12 +676,90 @@ func (p *parser) readFieldDefault(f *FieldDescriptorProto) *parseError {
 			return err
 		}
 		f.DefaultValue = proto.String(fmt.Sprint(b))
+	case FieldDescriptorProto_TYPE_DOUBLE:
+		tok, err := p.readFloat()
+		if err != nil {
+			return p.errorf("bad default for double: %v", err)
+		}
+		f.DefaultValue = proto.String(tok.value)
+	case FieldDescriptorProto_TYPE_FLOAT:
+		tok, err := p.readFloat()
+		if err != nil {
+			return p.errorf("bad default for float: %v", err)
+		}
+		f.DefaultValue = proto.String(tok.value)
+	case FieldDescriptorProto_TYPE_INT32:
+		x, err := p.readInt(math.MinInt32, math.MaxInt32)
+		if err != nil {
+			return p.errorf("bad default for int32: %v", err)
+		}
+		f.DefaultValue = proto.String(strconv.FormatInt(x, 10))
+	case FieldDescriptorProto_TYPE_INT64:
+		x, err := p.readInt(math.MinInt64, math.MaxInt64)
+		if err != nil {
+			return p.errorf("bad default for int64: %v", err)
+		}
+		f.DefaultValue = proto.String(strconv.FormatInt(x, 10))
+	case FieldDescriptorProto_TYPE_UINT32:
+		x, err := p.readUint(math.MaxUint32)
+		if err != nil {
+			return p.errorf("bad default for uint32: %v", err)
+		}
+		f.DefaultValue = proto.String(strconv.FormatUint(x, 10))
+	case FieldDescriptorProto_TYPE_UINT64:
+		x, err := p.readUint(math.MaxUint64)
+		if err != nil {
+			return p.errorf("bad default for uint64: %v", err)
+		}
+		f.DefaultValue = proto.String(strconv.FormatUint(x, 10))
 	// TODO: more types
 	default:
 		return p.errorf("default value for %v not implemented yet", *f.Type)
 	}
 
 	return nil
+}
+
+func (p *parser) readFloat() (*token, *parseError) {
+	tok := p.next()
+	if tok.err != nil {
+		return nil, tok.err
+	}
+	_, err := strconv.ParseFloat(tok.value, 64)
+	if err != nil {
+		return nil, p.errorf("bad float %q: %v", tok.value, err)
+	}
+	return tok, nil
+}
+
+func (p *parser) readInt(min, max int64) (int64, *parseError) {
+	tok := p.next()
+	if tok.err != nil {
+		return 0, tok.err
+	}
+	x, err := strconv.ParseInt(tok.value, 0, 64)
+	if err != nil {
+		return 0, p.errorf("bad int %q: %v", tok.value, err)
+	}
+	if x < min || max < x {
+		return 0, p.errorf("int %d outside range [%d,%d]", x, min, max)
+	}
+	return x, nil
+}
+
+func (p *parser) readUint(max uint64) (uint64, *parseError) {
+	tok := p.next()
+	if tok.err != nil {
+		return 0, tok.err
+	}
+	x, err := strconv.ParseUint(tok.value, 0, 64)
+	if err != nil {
+		return 0, p.errorf("bad uint %q: %v", tok.value, err)
+	}
+	if x > max {
+		return 0, p.errorf("uint %d > %d", x, max)
+	}
+	return x, nil
 }
 
 func (p *parser) readString() (*token, *parseError) {
@@ -732,7 +811,8 @@ func (p *parser) next() *token {
 		p.backed = false
 	} else {
 		p.advance()
-		if p.done {
+		//log.Printf("parser·next(): advanced to %q [err: %v]", p.cur.value, p.cur.err)
+		if p.done && p.cur.err == nil {
 			p.cur.value = ""
 			p.cur.err = eof
 		}
@@ -756,10 +836,10 @@ func (p *parser) advance() {
 	case ';', '{', '}', '=', '[', ']':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
-	case '"':
+	case '"', '\'':
 		// Quoted string
 		i := 1
-		for i < len(p.s) && p.s[i] != '"' {
+		for i < len(p.s) && p.s[i] != p.s[0] {
 			if p.s[i] == '\\' && i+1 < len(p.s) {
 				// skip escaped character
 				i++
@@ -772,9 +852,11 @@ func (p *parser) advance() {
 		}
 		i++
 		p.cur.value, p.s = p.s[:i], p.s[i:]
+		// TODO: This doesn't work for single quote strings;
+		// quotes will be mangled.
 		unq, err := strconv.Unquote(p.cur.value)
 		if err != nil {
-			p.errorf("invalid quoted string: %v", err)
+			p.errorf("invalid quoted string [%s]: %v", p.cur.value, err)
 		}
 		p.cur.unquoted = unq
 	default:
