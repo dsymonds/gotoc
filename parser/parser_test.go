@@ -89,8 +89,6 @@ var parseTests = []parseTest{
 		  required int64  foo = 1 [default= 0x7FFFFFFFFFFFFFFF];
 		  required int64  foo = 1 [default=-0x8000000000000000];
 		  required uint64 foo = 1 [default= 0xFFFFFFFFFFFFFFFF];
-		  // TODO: uncomment this when the float parser handles it.
-		  //required double foo = 1 [default= 0xabcd];
 		}`,
 		`message_type {
 		  name: "TestMessage"
@@ -125,11 +123,6 @@ var parseTests = []parseTest{
 		  field { type:TYPE_INT64   default_value:"9223372036854775807"  ` + fieldDefaultsEtc + ` }
 		  field { type:TYPE_INT64   default_value:"-9223372036854775808" ` + fieldDefaultsEtc + ` }
 		  field { type:TYPE_UINT64  default_value:"18446744073709551615" ` + fieldDefaultsEtc + ` }
-		  ` +
-			/*
-			  field { type:TYPE_DOUBLE  default_value:"43981"                ` + fieldDefaultsEtc + ` }
-			*/
-			`
 		}`,
 	},
 	{
