@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
-	"code.google.com/p/goprotobuf/proto"
-	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
+	"github.com/golang/protobuf/proto"
+	. "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 func main() {

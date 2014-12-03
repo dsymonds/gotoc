@@ -11,5 +11,5 @@ See the LICENSE file for more details.
 
 Read more
 ---------
-* [The protocol buffers open source project](http://code.google.com/p/protobuf/)
-* [The Go protocol buffer code generator plugin and support library](http://code.google.com/p/goprotobuf/)
+* [The protocol buffers open source project](https://developers.google.com/protocol-buffers/)
+* [The Go protocol buffer code generator plugin and support library](https://github.com/golang/protobuf)

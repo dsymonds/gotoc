@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	"code.google.com/p/goprotobuf/proto"
-	. "code.google.com/p/goprotobuf/protoc-gen-go/descriptor"
+	"github.com/golang/protobuf/proto"
+	. "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 // tryParse attempts to parse the input, and verifies that it matches
