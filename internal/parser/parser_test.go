@@ -3,24 +3,42 @@ package parser
 import (
 	"testing"
 
+	"github.com/dsymonds/gotoc/internal/ast"
+	"github.com/dsymonds/gotoc/internal/gendesc"
 	"github.com/golang/protobuf/proto"
-	. "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 // tryParse attempts to parse the input, and verifies that it matches
 // the FileDescriptorProto represented in text format.
 func tryParse(t *testing.T, input, output string) {
-	want := new(FileDescriptorProto)
+	want := new(pb.FileDescriptorProto)
 	if err := proto.UnmarshalText(output, want); err != nil {
 		t.Fatalf("Test failure parsing a wanted proto: %v", err)
 	}
 
-	got := new(FileDescriptorProto)
 	p := newParser(input)
-	if pe := p.readFile(got); pe != nil {
+	f := new(ast.File)
+	if pe := p.readFile(f); pe != nil {
 		t.Errorf("Failed parsing input: %v", pe)
 		return
 	}
+	fset := &ast.FileSet{Files: []*ast.File{f}}
+	if err := resolveSymbols(fset); err != nil {
+		t.Errorf("Resolving symbols: %v", err)
+		return
+	}
+
+	fds, err := gendesc.Generate(fset)
+	if err != nil {
+		t.Errorf("Generating FileDescriptorSet: %v", err)
+		return
+	}
+	if n := len(fds.File); n != 1 {
+		t.Errorf("Generated %d FileDescriptorProtos, want 1", n)
+		return
+	}
+	got := fds.File[0]
 
 	if !proto.Equal(got, want) {
 		t.Errorf("Mismatch!\nGot:\n%v\nWant:\n%v", got, want)

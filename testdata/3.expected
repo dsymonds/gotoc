@@ -3,6 +3,20 @@ file: <
   message_type: <
     name: "A"
     field: <
+      name: "int"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_INT32
+      default_value: "7"
+    >
+    field: <
+      name: "boolean"
+      number: 2
+      label: LABEL_OPTIONAL
+      type: TYPE_BOOL
+      default_value: "true"
+    >
+    field: <
       name: "str"
       number: 3
       label: LABEL_OPTIONAL

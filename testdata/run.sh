@@ -12,6 +12,7 @@ failures=0
 for ((i=1; $i <= $MAX; i=$((i+1)))); do
   if [ ! -f $i.proto ]; then continue; fi
   echo "---[ Test $i ]---" 1>&2
+  cat $i.proto | sed 's,^,	,' 1>&2
 
   $GOTOC --descriptor_only $i.proto > $i.actual
   $PROTOCMP $i.expected $i.actual || {

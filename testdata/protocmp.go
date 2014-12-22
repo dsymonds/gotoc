@@ -154,4 +154,7 @@ func cmpFields(a, b *FieldDescriptorProto) {
 	if aTN, bTN := a.GetTypeName(), b.GetTypeName(); aTN != bTN {
 		log.Fatalf("Different field type_name for %v: %q vs. %q", *a.Name, aTN, bTN)
 	}
+	if ad, bd := a.GetDefaultValue(), b.GetDefaultValue(); ad != bd {
+		log.Fatalf("Different field default_value for %v: %q vs. %q", *a.Name, ad, bd)
+	}
 }

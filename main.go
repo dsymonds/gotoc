@@ -14,8 +14,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 
-	"github.com/dsymonds/gotoc/parser"
-	"github.com/dsymonds/gotoc/resolver"
+	"github.com/dsymonds/gotoc/internal/gendesc"
+	"github.com/dsymonds/gotoc/internal/parser"
 )
 
 var (
@@ -51,12 +51,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	fds, err := parser.ParseFiles(flag.Args(), strings.Split(*importPath, ","))
+	fs, err := parser.ParseFiles(flag.Args(), strings.Split(*importPath, ","))
 	if err != nil {
 		log.Fatalf("Failed parsing: %v", err)
 	}
-	if err := resolver.ResolveSymbols(fds); err != nil {
-		log.Fatalf("Failed resolving symbols: %v", err)
+	fds, err := gendesc.Generate(fs)
+	if err != nil {
+		log.Fatalf("Failed generating descriptors: %v", err)
 	}
 
 	if *descriptorOnly {

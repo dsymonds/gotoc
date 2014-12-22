@@ -1,6 +1,10 @@
 minitest:
 	./gotoc testdata/mini.proto
 
+regtest:
+	go build
+	testdata/run.sh
+
 PROTOBUF=$(HOME)/src/protobuf
 MINI_TMP=_mini.pb
 baseline:
