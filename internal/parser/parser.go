@@ -136,6 +136,26 @@ func (p *parser) readFile(f *ast.File) *parseError {
 			if err := p.readToken(";"); err != nil {
 				return err
 			}
+		case "syntax":
+			if f.Syntax != "" {
+				return p.errorf("duplicate syntax statement")
+			}
+			if err := p.readToken("="); err != nil {
+				return err
+			}
+			tok, err := p.readString()
+			if err != nil {
+				return err
+			}
+			switch s := tok.unquoted; s {
+			case "proto2", "proto3":
+				f.Syntax = s
+			default:
+				return p.errorf("invalid syntax value %q", s)
+			}
+			if err := p.readToken(";"); err != nil {
+				return err
+			}
 		case "import":
 			tok, err := p.readString()
 			if err != nil {

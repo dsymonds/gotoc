@@ -40,7 +40,12 @@ func genFile(f *ast.File) (*pb.FileDescriptorProto, error) {
 		fdp.MessageType = append(fdp.MessageType, dp)
 	}
 	// TODO: EnumType, SourceCodeInfo
-	fdp.Syntax = maybeString(f.Syntax)
+	switch f.Syntax {
+	case "proto2", "":
+		// "proto2" is considered the default; don't set anything.
+	default:
+		fdp.Syntax = proto.String(f.Syntax)
+	}
 
 	return fdp, nil
 }
