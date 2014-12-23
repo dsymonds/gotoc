@@ -134,11 +134,21 @@ func qualifiedName(x interface{}) string {
 // A mapping of ast.FieldType to the proto type.
 // Does not include TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
 var fieldTypeMap = map[ast.FieldType]pb.FieldDescriptorProto_Type{
-	ast.Int64:  pb.FieldDescriptorProto_TYPE_INT64,
-	ast.Int32:  pb.FieldDescriptorProto_TYPE_INT32,
-	ast.Bool:   pb.FieldDescriptorProto_TYPE_BOOL,
-	ast.String: pb.FieldDescriptorProto_TYPE_STRING,
-	ast.Sint64: pb.FieldDescriptorProto_TYPE_SINT64,
+	ast.Double:   pb.FieldDescriptorProto_TYPE_DOUBLE,
+	ast.Float:    pb.FieldDescriptorProto_TYPE_FLOAT,
+	ast.Int64:    pb.FieldDescriptorProto_TYPE_INT64,
+	ast.Uint64:   pb.FieldDescriptorProto_TYPE_UINT64,
+	ast.Int32:    pb.FieldDescriptorProto_TYPE_INT32,
+	ast.Fixed64:  pb.FieldDescriptorProto_TYPE_FIXED64,
+	ast.Fixed32:  pb.FieldDescriptorProto_TYPE_FIXED32,
+	ast.Bool:     pb.FieldDescriptorProto_TYPE_BOOL,
+	ast.String:   pb.FieldDescriptorProto_TYPE_STRING,
+	ast.Bytes:    pb.FieldDescriptorProto_TYPE_BYTES,
+	ast.Uint32:   pb.FieldDescriptorProto_TYPE_UINT32,
+	ast.Sfixed32: pb.FieldDescriptorProto_TYPE_SFIXED32,
+	ast.Sfixed64: pb.FieldDescriptorProto_TYPE_SFIXED64,
+	ast.Sint32:   pb.FieldDescriptorProto_TYPE_SINT32,
+	ast.Sint64:   pb.FieldDescriptorProto_TYPE_SINT64,
 }
 
 func maybeString(s string) *string {

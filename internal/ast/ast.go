@@ -87,10 +87,20 @@ type FieldType int8
 
 const (
 	min FieldType = iota
+	Double
+	Float
 	Int64
+	Uint64
 	Int32
+	Fixed64
+	Fixed32
 	Bool
 	String
+	Bytes
+	Uint32
+	Sfixed32
+	Sfixed64
+	Sint32
 	Sint64
 	max
 )
@@ -98,11 +108,21 @@ const (
 func (ft FieldType) IsValid() bool { return min < ft && ft < max }
 
 var FieldTypeMap = map[FieldType]string{
-	Int64:  "int64",
-	Int32:  "int32",
-	Bool:   "bool",
-	String: "string",
-	Sint64: "sint64",
+	Double:   "double",
+	Float:    "float",
+	Int64:    "int64",
+	Uint64:   "uint64",
+	Int32:    "int32",
+	Fixed64:  "fixed64",
+	Fixed32:  "fixed32",
+	Bool:     "bool",
+	String:   "string",
+	Bytes:    "bytes",
+	Uint32:   "uint32",
+	Sfixed32: "sfixed32",
+	Sfixed64: "sfixed64",
+	Sint32:   "sint32",
+	Sint64:   "sint64",
 }
 
 func (ft FieldType) String() string {
