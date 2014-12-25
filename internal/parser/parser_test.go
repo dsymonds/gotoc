@@ -107,7 +107,9 @@ var parseTests = []parseTest{
 		  required int64  foo = 1 [default= 0x7FFFFFFFFFFFFFFF];
 		  required int64  foo = 1 [default=-0x8000000000000000];
 		  required uint64 foo = 1 [default= 0xFFFFFFFFFFFFFFFF];
-		}`,
+		}
+		enum Foo { UNKNOWN=0; FOO=1; }
+		`,
 		`message_type {
 		  name: "TestMessage"
 		  field { type:TYPE_INT32   default_value:"1"         ` + fieldDefaultsEtc + ` }
@@ -133,14 +135,20 @@ var parseTests = []parseTest{
 			*/
 			`
 		  field { type:TYPE_BOOL    default_value:"true"      ` + fieldDefaultsEtc + ` }
-		  field { type_name:"Foo" default_value:"FOO"       ` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_ENUM    type_name:".Foo" default_value:"FOO"` + fieldDefaultsEtc + ` }
 
-		  field { type:TYPE_INT32   default_value:"2147483647"           ` + fieldDefaultsEtc + ` }
-		  field { type:TYPE_INT32   default_value:"-2147483648"          ` + fieldDefaultsEtc + ` }
-		  field { type:TYPE_UINT32  default_value:"4294967295"           ` + fieldDefaultsEtc + ` }
-		  field { type:TYPE_INT64   default_value:"9223372036854775807"  ` + fieldDefaultsEtc + ` }
-		  field { type:TYPE_INT64   default_value:"-9223372036854775808" ` + fieldDefaultsEtc + ` }
-		  field { type:TYPE_UINT64  default_value:"18446744073709551615" ` + fieldDefaultsEtc + ` }
+		  ` +
+			/*
+			  descriptor.proto says "For numeric types, contains the original text representation of the value.";
+			  we match that, and thus diverge from protoc.
+			*/
+			`
+		  field { type:TYPE_INT32   default_value:"0x7FFFFFFF"         ` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_INT32   default_value:"-0x80000000"        ` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_UINT32  default_value:"0xFFFFFFFF"         ` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_INT64   default_value:"0x7FFFFFFFFFFFFFFF" ` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_INT64   default_value:"-0x8000000000000000"` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_UINT64  default_value:"0xFFFFFFFFFFFFFFFF" ` + fieldDefaultsEtc + ` }
 		}`,
 	},
 	{
