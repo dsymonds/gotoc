@@ -135,7 +135,7 @@ var parseTests = []parseTest{
 			*/
 			`
 		  field { type:TYPE_BOOL    default_value:"true"      ` + fieldDefaultsEtc + ` }
-		  field { type:TYPE_ENUM    type_name:".Foo" default_value:"FOO"` + fieldDefaultsEtc + ` }
+		  field { type_name:"Foo"   default_value:"FOO"       ` + fieldDefaultsEtc + ` }
 
 		  ` +
 			/*
