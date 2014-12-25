@@ -39,7 +39,14 @@ func genFile(f *ast.File) (*pb.FileDescriptorProto, error) {
 		}
 		fdp.MessageType = append(fdp.MessageType, dp)
 	}
-	// TODO: EnumType, SourceCodeInfo
+	for _, enum := range f.Enums {
+		edp, err := genEnum(enum)
+		if err != nil {
+			return nil, err
+		}
+		fdp.EnumType = append(fdp.EnumType, edp)
+	}
+	// TODO: SourceCodeInfo
 	switch f.Syntax {
 	case "proto2", "":
 		// "proto2" is considered the default; don't set anything.
@@ -68,7 +75,13 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 		}
 		dp.NestedType = append(dp.NestedType, ndp)
 	}
-	// TODO: EnumType
+	for _, ne := range m.Enums {
+		edp, err := genEnum(ne)
+		if err != nil {
+			return nil, err
+		}
+		dp.EnumType = append(dp.EnumType, edp)
+	}
 	return dp, nil
 }
 
@@ -103,6 +116,19 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, error) {
 	}
 
 	return fdp, nil
+}
+
+func genEnum(enum *ast.Enum) (*pb.EnumDescriptorProto, error) {
+	edp := &pb.EnumDescriptorProto{
+		Name: proto.String(enum.Name),
+	}
+	for _, ev := range enum.Values {
+		edp.Value = append(edp.Value, &pb.EnumValueDescriptorProto{
+			Name:   proto.String(ev.Name),
+			Number: proto.Int32(ev.Number),
+		})
+	}
+	return edp, nil
 }
 
 // qualifiedName returns the fully-qualified name of x,

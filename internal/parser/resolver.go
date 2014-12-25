@@ -90,13 +90,11 @@ func (s *scope) findName(name string) []interface{} {
 				return []interface{}{msg}
 			}
 		}
-		/* TODO
 		for _, enum := range ov.Enums {
 			if enum.Name == name {
 				return []interface{}{enum}
 			}
 		}
-		*/
 		// can't be *EnumDescriptorProto
 	}
 	return nil

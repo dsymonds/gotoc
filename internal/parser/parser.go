@@ -282,6 +282,15 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 				return err
 			}
 			nmsg.Up = msg
+		case "enum":
+			// nested enum
+			p.back()
+			ne := new(ast.Enum)
+			msg.Enums = append(msg.Enums, ne)
+			if err := p.readEnum(ne); err != nil {
+				return err
+			}
+			ne.Up = msg
 		default:
 			// field; this token is required/optional/repeated,
 			// a primitive type, or a named type.

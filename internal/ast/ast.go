@@ -41,6 +41,7 @@ type Message struct {
 	Fields   []*Field
 
 	Messages []*Message
+	Enums    []*Enum
 
 	Up interface{} // either *File or *Message
 }

@@ -149,7 +149,13 @@ var parseTests = []parseTest{
 		  field { type:TYPE_INT64   default_value:"0x7FFFFFFFFFFFFFFF" ` + fieldDefaultsEtc + ` }
 		  field { type:TYPE_INT64   default_value:"-0x8000000000000000"` + fieldDefaultsEtc + ` }
 		  field { type:TYPE_UINT64  default_value:"0xFFFFFFFFFFFFFFFF" ` + fieldDefaultsEtc + ` }
-		}`,
+		}
+		enum_type {
+			name:"Foo"
+			value { name:"UNKNOWN" number:0 }
+			value { name:"FOO" number:1 }
+		}
+		`,
 	},
 	{
 		"NestedMessage",
