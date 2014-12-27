@@ -173,6 +173,17 @@ var parseTests = []parseTest{
 		`message_type { name: "TestMessage" extension_range { start:10 end:20 } extension_range { start:30 end:536870912 } }`,
 	},
 	{
+		"CompoundExtensionRange",
+		"message TestMessage {\n  extensions 2, 15, 9 to 11, 100 to max, 3;\n}\n",
+		`message_type { name: "TestMessage" ` +
+			`  extension_range { start:2   end:3         }` +
+			`  extension_range { start:15  end:16        }` +
+			`  extension_range { start:9   end:12        }` +
+			`  extension_range { start:100 end:536870912 }` +
+			`  extension_range { start:3   end:4         }` +
+			`}`,
+	},
+	{
 		"EnumValues",
 		"enum TestEnum {\n  FOO = 13;\n  BAR = -10;\n  BAZ = 500;\n}\n",
 		`enum_type { name: "TestEnum" value { name:"FOO" number:13 } value { name:"BAR" number:-10 } value { name:"BAZ" number:500 } }`,

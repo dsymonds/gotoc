@@ -43,6 +43,8 @@ type Message struct {
 	Messages []*Message
 	Enums    []*Enum
 
+	ExtensionRanges [][2]int // extension ranges (inclusive at both ends)
+
 	Up interface{} // either *File or *Message
 }
 

@@ -82,6 +82,13 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 		}
 		dp.EnumType = append(dp.EnumType, edp)
 	}
+	for _, r := range m.ExtensionRanges {
+		// DescriptorProto.ExtensionRange uses a half-open interval.
+		dp.ExtensionRange = append(dp.ExtensionRange, &pb.DescriptorProto_ExtensionRange{
+			Start: proto.Int32(int32(r[0])),
+			End:   proto.Int32(int32(r[1] + 1)),
+		})
+	}
 	return dp, nil
 }
 

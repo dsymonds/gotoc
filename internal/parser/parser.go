@@ -291,6 +291,14 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 				return err
 			}
 			ne.Up = msg
+		case "extensions":
+			// extension range
+			p.back()
+			r, err := p.readExtensionRange()
+			if err != nil {
+				return err
+			}
+			msg.ExtensionRanges = append(msg.ExtensionRanges, r...)
 		default:
 			// field; this token is required/optional/repeated,
 			// a primitive type, or a named type.
@@ -345,7 +353,7 @@ func (p *parser) readField(f *ast.Field) *parseError {
 		return err
 	}
 
-	tag, err := p.readTagNumber()
+	tag, err := p.readTagNumber(false)
 	if err != nil {
 		return err
 	}
@@ -385,10 +393,55 @@ func (p *parser) readField(f *ast.Field) *parseError {
 	return nil
 }
 
-func (p *parser) readTagNumber() (int, *parseError) {
+func (p *parser) readExtensionRange() ([][2]int, *parseError) {
+	if err := p.readToken("extensions"); err != nil {
+		return nil, err
+	}
+
+	var rs [][2]int
+	for {
+		// next token must be a number,
+		// followed by a comma, semicolon or "to".
+		start, err := p.readTagNumber(false)
+		if err != nil {
+			return nil, err
+		}
+		end := start
+		tok := p.next()
+		if tok.err != nil {
+			return nil, err
+		}
+		if tok.value == "to" {
+			end, err = p.readTagNumber(true) // allow "max"
+			if err != nil {
+				return nil, err
+			}
+			if start > end {
+				return nil, p.errorf("bad extension range order: %d > %d", start, end)
+			}
+			tok = p.next()
+			if tok.err != nil {
+				return nil, err
+			}
+		}
+		rs = append(rs, [2]int{start, end})
+		if tok.value != "," && tok.value != ";" {
+			return nil, p.errorf(`got %q, want ",", ";" or "to"`, tok.value)
+		}
+		if tok.value == ";" {
+			break
+		}
+	}
+	return rs, nil
+}
+
+func (p *parser) readTagNumber(allowMax bool) (int, *parseError) {
 	tok := p.next()
 	if tok.err != nil {
 		return 0, tok.err
+	}
+	if allowMax && tok.value == "max" {
+		return 1<<29 - 1, nil
 	}
 	n, err := strconv.ParseInt(tok.value, 10, 32)
 	if err != nil {
@@ -517,7 +570,7 @@ func (p *parser) advance() {
 	p.cur.offset, p.cur.line = p.offset, p.line
 	switch p.s[0] {
 	// TODO: more cases, like punctuation.
-	case ';', '{', '}', '=', '[', ']':
+	case ';', '{', '}', '=', '[', ']', ',':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
 	case '"', '\'':
