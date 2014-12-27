@@ -193,6 +193,11 @@ func (p *parser) readFile(f *ast.File) *parseError {
 				return err
 			}
 		case "import":
+			if err := p.readToken("public"); err == nil {
+				f.PublicImports = append(f.PublicImports, len(f.Imports))
+			} else {
+				p.back()
+			}
 			tok, err := p.readString()
 			if err != nil {
 				return err

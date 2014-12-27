@@ -5,6 +5,7 @@ package gendesc
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -33,6 +34,10 @@ func genFile(f *ast.File) (*pb.FileDescriptorProto, error) {
 	for _, imp := range f.Imports {
 		fdp.Dependency = append(fdp.Dependency, imp)
 	}
+	for _, i := range f.PublicImports {
+		fdp.PublicDependency = append(fdp.PublicDependency, int32(i))
+	}
+	sort.Sort(int32Slice(fdp.PublicDependency))
 	for _, m := range f.Messages {
 		dp, err := genMessage(m)
 		if err != nil {
@@ -218,3 +223,9 @@ func maybeString(s string) *string {
 	}
 	return nil
 }
+
+type int32Slice []int32
+
+func (s int32Slice) Len() int           { return len(s) }
+func (s int32Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s int32Slice) Less(i, j int) bool { return s[i] < s[j] }

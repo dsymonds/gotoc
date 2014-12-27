@@ -27,7 +27,8 @@ type File struct {
 	Package []string
 	Options [][2]string // slice of key/value pairs
 
-	Imports []string
+	Imports       []string
+	PublicImports []int // list of indexes in the Imports slice
 
 	Messages []*Message // top-level messages
 	Enums    []*Enum    // top-level enums
