@@ -184,6 +184,14 @@ var parseTests = []parseTest{
 			`}`,
 	},
 	{
+		"OptionalOptionalLabelProto3",
+		"syntax = \"proto3\";\nmessage TestMessage {\n  int32 foo = 1;\n  optional int32 bar = 2;\n}\n",
+		`syntax: "proto3" message_type { name: "TestMessage" ` +
+			`  field { name:"foo" label:LABEL_OPTIONAL type:TYPE_INT32 number:1 }` +
+			`  field { name:"bar" label:LABEL_OPTIONAL type:TYPE_INT32 number:2 }` +
+			`}`,
+	},
+	{
 		"EnumValues",
 		"enum TestEnum {\n  FOO = 13;\n  BAR = -10;\n  BAZ = 500;\n}\n",
 		`enum_type { name: "TestEnum" value { name:"FOO" number:13 } value { name:"BAR" number:-10 } value { name:"BAZ" number:500 } }`,
