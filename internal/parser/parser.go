@@ -36,7 +36,7 @@ func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) 
 			return nil, err
 		}
 
-		p := newParser(string(buf))
+		p := newParser(filename, string(buf))
 		if pe := p.readFile(f); pe != nil {
 			return nil, pe
 		}
@@ -59,9 +59,10 @@ func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) 
 }
 
 type parseError struct {
-	message string
-	line    int // 1-based line number
-	offset  int // 0-based byte offset from start of input
+	message  string
+	filename string
+	line     int // 1-based line number
+	offset   int // 0-based byte offset from start of input
 }
 
 func (pe *parseError) Error() string {
@@ -69,9 +70,9 @@ func (pe *parseError) Error() string {
 		return "<nil>"
 	}
 	if pe.line == 1 {
-		return fmt.Sprintf("line 1.%d: %v", pe.offset, pe.message)
+		return fmt.Sprintf("%s:1.%d: %v", pe.filename, pe.offset, pe.message)
 	}
-	return fmt.Sprintf("line %d: %v", pe.line, pe.message)
+	return fmt.Sprintf("%s:%d: %v", pe.filename, pe.line, pe.message)
 }
 
 var eof = &parseError{message: "EOF"}
@@ -91,6 +92,7 @@ func (t *token) astPosition() ast.Position {
 }
 
 type parser struct {
+	filename     string
 	s            string // remaining input
 	done         bool
 	backed       bool // whether back() was called
@@ -105,11 +107,12 @@ type comment struct {
 	line, offset int
 }
 
-func newParser(s string) *parser {
+func newParser(filename, s string) *parser {
 	return &parser{
-		s:    s,
-		line: 1,
-		cur:  token{line: 1},
+		filename: filename,
+		s:        s,
+		line:     1,
+		cur:      token{line: 1},
 	}
 }
 
@@ -690,9 +693,10 @@ func (p *parser) skipWhitespaceAndComments() {
 
 func (p *parser) errorf(format string, a ...interface{}) *parseError {
 	pe := &parseError{
-		message: fmt.Sprintf(format, a...),
-		line:    p.cur.line,
-		offset:  p.cur.offset,
+		message:  fmt.Sprintf(format, a...),
+		filename: p.filename,
+		line:     p.cur.line,
+		offset:   p.cur.offset,
 	}
 	p.cur.err = pe
 	p.done = true

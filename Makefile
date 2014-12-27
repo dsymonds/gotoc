@@ -1,4 +1,5 @@
 minitest:
+	go build
 	./gotoc testdata/mini.proto
 
 regtest:

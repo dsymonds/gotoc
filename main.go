@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -53,11 +52,11 @@ func main() {
 
 	fs, err := parser.ParseFiles(flag.Args(), strings.Split(*importPath, ","))
 	if err != nil {
-		log.Fatalf("Failed parsing: %v", err)
+		fatalf("%v", err)
 	}
 	fds, err := gendesc.Generate(fs)
 	if err != nil {
-		log.Fatalf("Failed generating descriptors: %v", err)
+		fatalf("Failed generating descriptors: %v", err)
 	}
 
 	if *descriptorOnly {
@@ -77,13 +76,13 @@ func main() {
 	}
 	buf, err := proto.Marshal(cgRequest)
 	if err != nil {
-		log.Fatalf("Failed marshaling CG request: %v", err)
+		fatalf("Failed marshaling CG request: %v", err)
 	}
 
 	// Find plugin.
 	pluginPath := fullPath(*pluginBinary, strings.Split(os.Getenv("PATH"), ":"))
 	if pluginPath == "" {
-		log.Fatalf("Failed finding plugin binary %q", *pluginBinary)
+		fatalf("Failed finding plugin binary %q", *pluginBinary)
 	}
 
 	// Run the plugin subprocess.
@@ -94,13 +93,13 @@ func main() {
 	}
 	buf, err = cmd.Output()
 	if err != nil {
-		log.Fatalf("Failed running plugin: %v", err)
+		fatalf("Failed running plugin: %v", err)
 	}
 
 	// Parse the response.
 	cgResponse := new(plugin.CodeGeneratorResponse)
 	if err = proto.Unmarshal(buf, cgResponse); err != nil {
-		log.Fatalf("Failed unmarshaling CG response: %v", err)
+		fatalf("Failed unmarshaling CG response: %v", err)
 	}
 
 	// TODO: check cgResponse.Error
@@ -108,10 +107,10 @@ func main() {
 	for _, f := range cgResponse.File {
 		// TODO: If f.Name is nil, the content should be appended to the previous file.
 		if f.Name == nil || f.Content == nil {
-			log.Fatal("Malformed CG response")
+			fatalf("Malformed CG response")
 		}
 		if err := ioutil.WriteFile(*f.Name, []byte(*f.Content), 0644); err != nil {
-			log.Fatalf("Failed writing output file: %v", err)
+			fatalf("Failed writing output file: %v", err)
 		}
 	}
 }
@@ -119,4 +118,9 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:  %s [options] <foo.proto> ...\n", os.Args[0])
 	flag.PrintDefaults()
+}
+
+func fatalf(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format+"\n", args...)
+	os.Exit(1)
 }
