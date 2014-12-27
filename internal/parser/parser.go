@@ -128,14 +128,32 @@ func (p *parser) readFile(f *ast.File) *parseError {
 			if f.Package != nil {
 				return p.errorf("duplicate package statement")
 			}
-			tok := p.next()
-			if tok.err != nil {
-				return tok.err
+			var pkg string
+			for {
+				tok := p.next()
+				if tok.err != nil {
+					return tok.err
+				}
+				if tok.value == ";" {
+					break
+				}
+				if tok.value == "." {
+					// okay if we already have at least one package component,
+					// and didn't just read a dot.
+					if pkg == "" || strings.HasSuffix(pkg, ".") {
+						return p.errorf(`got ".", want package name`)
+					}
+				} else {
+					// okay if we don't have a package component,
+					// or just read a dot.
+					if pkg != "" && !strings.HasSuffix(pkg, ".") {
+						return p.errorf(`got %q, want "." or ";"`, tok.value)
+					}
+					// TODO: validate more
+				}
+				pkg += tok.value
 			}
-			f.Package = strings.Split(tok.value, ".") // TODO: validate more
-			if err := p.readToken(";"); err != nil {
-				return err
-			}
+			f.Package = strings.Split(pkg, ".")
 		case "syntax":
 			if f.Syntax != "" {
 				return p.errorf("duplicate syntax statement")
