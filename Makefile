@@ -2,6 +2,14 @@ minitest:
 	go build
 	./gotoc testdata/mini.proto
 
+minidiff:
+	go build
+	./gotoc testdata/mini.proto
+	mv testdata/mini.pb.go testdata/mini-gotoc.pb.go
+	protoc --go_out=. testdata/mini.proto
+	mv testdata/mini.pb.go testdata/mini-protoc.pb.go
+	diff -ud testdata/mini-{gotoc,protoc}.pb.go || true
+
 regtest:
 	go build
 	testdata/run.sh
