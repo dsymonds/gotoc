@@ -145,8 +145,12 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, error) {
 			return nil, fmt.Errorf("internal error: no mapping from ast.FieldType %v", t)
 		}
 		fdp.Type = pt.Enum()
-	case *ast.Message, *ast.Enum:
-		fdp.TypeName = proto.String(f.TypeName)
+	case *ast.Message:
+		fdp.Type = pb.FieldDescriptorProto_TYPE_MESSAGE.Enum()
+		fdp.TypeName = proto.String(qualifiedName(t))
+	case *ast.Enum:
+		fdp.Type = pb.FieldDescriptorProto_TYPE_ENUM.Enum()
+		fdp.TypeName = proto.String(qualifiedName(t))
 	default:
 		return nil, fmt.Errorf("internal error: bad ast.Field.Type type %T", f.Type)
 	}
@@ -187,13 +191,18 @@ func qualifiedName(x interface{}) string {
 		}
 		break // *ast.File
 	}
+	if f := x.(*ast.File); true {
+		// Add package components in reverse order.
+		for i := len(f.Package) - 1; i >= 0; i-- {
+			parts = append(parts, f.Package[i])
+		}
+	}
 	// Reverse parts, then join with dots.
 	for i, j := 0, len(parts)-1; i < j; {
 		parts[i], parts[j] = parts[j], parts[i]
 		i++
 		j--
 	}
-	// TODO: mix in package name?
 	return "." + strings.Join(parts, ".")
 }
 

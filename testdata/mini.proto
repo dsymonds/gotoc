@@ -1,6 +1,6 @@
 // This is a test package.
 // As you can see, comments will be ignored.
-package foo;
+package foo.bar.baz;
 
 import "testdata/imp.proto";
 import "testdata/imp2.proto";
@@ -10,9 +10,10 @@ message Bar {
   optional string name = 2;
   optional Other other = 3;
 
-  optional group Group = 7 {
-    required string x = 1;
-  }
+  // TODO: uncomment when groups are supported
+  //optional group Group = 7 {
+  //  required string x = 1;
+  //}
 
   message Nested {}
   optional Nested nested = 4;

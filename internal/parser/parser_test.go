@@ -17,7 +17,7 @@ func tryParse(t *testing.T, input, output string) {
 		t.Fatalf("Test failure parsing a wanted proto: %v", err)
 	}
 
-	p := newParser(input)
+	p := newParser("-", input)
 	f := new(ast.File)
 	if pe := p.readFile(f); pe != nil {
 		t.Errorf("Failed parsing input: %v", pe)
@@ -135,7 +135,7 @@ var parseTests = []parseTest{
 			*/
 			`
 		  field { type:TYPE_BOOL    default_value:"true"      ` + fieldDefaultsEtc + ` }
-		  field { type_name:"Foo"   default_value:"FOO"       ` + fieldDefaultsEtc + ` }
+		  field { type:TYPE_ENUM    type_name:".Foo"   default_value:"FOO"` + fieldDefaultsEtc + ` }
 
 		  ` +
 			/*
@@ -160,12 +160,12 @@ var parseTests = []parseTest{
 	{
 		"NestedMessage",
 		"message TestMessage {\n  message Nested {}\n  optional Nested test_nested = 1;\n  }\n",
-		`message_type { name: "TestMessage" nested_type { name: "Nested" } field { name:"test_nested" label:LABEL_OPTIONAL number:1 type_name: "Nested" } }`,
+		`message_type { name: "TestMessage" nested_type { name: "Nested" } field { name:"test_nested" label:LABEL_OPTIONAL number:1 type:TYPE_MESSAGE type_name:".TestMessage.Nested" } }`,
 	},
 	{
 		"NestedEnum",
 		"message TestMessage {\n  enum NestedEnum {}\n  optional NestedEnum test_enum = 1;\n  }\n",
-		`message_type { name: "TestMessage" enum_type { name: "NestedEnum" } field { name:"test_enum" label:LABEL_OPTIONAL number:1 type_name: "NestedEnum" } }`,
+		`message_type { name: "TestMessage" enum_type { name: "NestedEnum" } field { name:"test_enum" label:LABEL_OPTIONAL number:1 type:TYPE_ENUM type_name:".TestMessage.NestedEnum" } }`,
 	},
 	{
 		"ExtensionRange",
