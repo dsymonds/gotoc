@@ -154,6 +154,24 @@ func (p *parser) readFile(f *ast.File) *parseError {
 				pkg += tok.value
 			}
 			f.Package = strings.Split(pkg, ".")
+		case "option":
+			tok := p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			key := tok.value
+			if err := p.readToken("="); err != nil {
+				return err
+			}
+			tok = p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			value := tok.value
+			if err := p.readToken(";"); err != nil {
+				return err
+			}
+			f.Options = append(f.Options, [2]string{key, value})
 		case "syntax":
 			if f.Syntax != "" {
 				return p.errorf("duplicate syntax statement")

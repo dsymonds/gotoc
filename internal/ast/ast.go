@@ -25,6 +25,7 @@ type File struct {
 	Name    string // filename
 	Syntax  string // "proto2" or "proto3"
 	Package []string
+	Options [][2]string // slice of key/value pairs
 
 	Imports []string
 

@@ -5,6 +5,7 @@ package gendesc
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/dsymonds/gotoc/internal/ast"
@@ -45,6 +46,32 @@ func genFile(f *ast.File) (*pb.FileDescriptorProto, error) {
 			return nil, err
 		}
 		fdp.EnumType = append(fdp.EnumType, edp)
+	}
+	for _, opt := range f.Options {
+		if fdp.Options == nil {
+			fdp.Options = new(pb.FileOptions)
+		}
+		// TODO: interpret common options
+		uo := new(pb.UninterpretedOption)
+		for _, part := range strings.Split(opt[0], ".") {
+			// TODO: support IsExtension
+			uo.Name = append(uo.Name, &pb.UninterpretedOption_NamePart{
+				NamePart:    proto.String(part),
+				IsExtension: proto.Bool(false),
+			})
+			// TODO: need to handle more types
+			if strings.HasPrefix(opt[1], `"`) {
+				// TODO: doesn't handle single quote strings, etc.
+				unq, err := strconv.Unquote(opt[1])
+				if err != nil {
+					return nil, err
+				}
+				uo.StringValue = []byte(unq)
+			} else {
+				uo.IdentifierValue = proto.String(opt[1])
+			}
+		}
+		fdp.Options.UninterpretedOption = append(fdp.Options.UninterpretedOption, uo)
 	}
 	// TODO: SourceCodeInfo
 	switch f.Syntax {
