@@ -5,4 +5,5 @@
 _testmain.go
 gotoc
 testdata/*.actual
+testdata/mini*.pb.go
 testdata/protocmp
