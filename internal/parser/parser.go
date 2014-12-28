@@ -349,10 +349,10 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 			p.back()
 			field := new(ast.Field)
 			msg.Fields = append(msg.Fields, field)
+			field.Up = msg // p.readField uses this
 			if err := p.readField(field); err != nil {
 				return err
 			}
-			field.Up = msg
 		case "}":
 			// end of message
 			p.back()
@@ -426,6 +426,33 @@ parseFromFieldName:
 		return err
 	}
 	f.Tag = tag
+
+	if f.TypeName == "group" {
+		if err := p.readToken("{"); err != nil {
+			return err
+		}
+
+		group := &ast.Message{
+			// the current parse position is probably good enough
+			Position: p.cur.astPosition(),
+			Name:     f.Name,
+			Group:    true,
+			Up:       f.Up,
+		}
+		if err := p.readMessageContents(group); err != nil {
+			return err
+		}
+		f.TypeName = f.Name
+		f.Up.Messages = append(f.Up.Messages, group) // ugh
+		if err := p.readToken("}"); err != nil {
+			return err
+		}
+		// A semicolon after a group is optional.
+		if err := p.readToken(";"); err != nil {
+			p.back()
+		}
+		return nil
+	}
 
 	if err := p.readToken("["); err == nil {
 		// start of options

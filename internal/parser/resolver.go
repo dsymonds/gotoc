@@ -5,7 +5,6 @@ package parser
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/dsymonds/gotoc/internal/ast"
@@ -192,7 +191,7 @@ func (r *resolver) resolveFieldTypeName(s *scope, name string) (interface{}, boo
 	// field must be a named type, message or enum
 	o := r.resolveName(s, name)
 	if o != nil {
-		log.Printf("(resolved %q to %q)", name, o.fullName())
+		//log.Printf("(resolved %q to %q)", name, o.fullName())
 		return o.last(), true
 	}
 	return nil, false
@@ -203,7 +202,7 @@ func (r *resolver) resolveName(s *scope, name string) *scope {
 
 	// Move up the scope, finding a place where the name makes sense.
 	for ws := s.dup(); !ws.global(); ws.pop() {
-		log.Printf("Trying to resolve %q in %q", name, ws.fullName())
+		//log.Printf("Trying to resolve %q in %q", name, ws.fullName())
 		if os := matchNameComponents(ws, parts); os != nil {
 			return os
 		}

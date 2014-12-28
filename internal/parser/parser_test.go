@@ -216,6 +216,15 @@ var parseTests = []parseTest{
 		}`,
 	},
 	{
+		"Group",
+		"message TestMessage {\n  optional group TestGroup = 1 {};\n}\n",
+		`message_type {
+		   name: "TestMessage"
+		   nested_type { name: "TestGroup" }
+		   field { name:"testgroup" label:LABEL_OPTIONAL number:1 type:TYPE_GROUP type_name: ".TestMessage.TestGroup" }
+		 }`,
+	},
+	{
 		"NestedMessage",
 		"message TestMessage {\n  message Nested {}\n  optional Nested test_nested = 1;\n  }\n",
 		`message_type { name: "TestMessage" nested_type { name: "Nested" } field { name:"test_nested" label:LABEL_OPTIONAL number:1 type:TYPE_MESSAGE type_name:".TestMessage.Nested" } }`,

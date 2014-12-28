@@ -40,9 +40,10 @@ type File struct {
 type Message struct {
 	Position Position // position of the "message" token
 	Name     string
+	Group    bool
 	Fields   []*Field
 
-	Messages []*Message
+	Messages []*Message // includes groups
 	Enums    []*Enum
 
 	ExtensionRanges [][2]int // extension ranges (inclusive at both ends)

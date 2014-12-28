@@ -182,7 +182,13 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, *pb.DescriptorProto, erro
 		}
 		fdp.Type = pt.Enum()
 	case *ast.Message:
-		fdp.Type = pb.FieldDescriptorProto_TYPE_MESSAGE.Enum()
+		if !t.Group {
+			fdp.Type = pb.FieldDescriptorProto_TYPE_MESSAGE.Enum()
+		} else {
+			fdp.Type = pb.FieldDescriptorProto_TYPE_GROUP.Enum()
+			// The field name is lowercased by protoc.
+			*fdp.Name = strings.ToLower(*fdp.Name)
+		}
 		fdp.TypeName = proto.String(qualifiedName(t))
 	case *ast.Enum:
 		fdp.Type = pb.FieldDescriptorProto_TYPE_ENUM.Enum()
