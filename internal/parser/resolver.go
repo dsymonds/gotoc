@@ -143,30 +143,59 @@ func init() {
 	}
 }
 
+var validMapKeyTypes = map[string]bool{
+	"int64":    true,
+	"uint64":   true,
+	"int32":    true,
+	"fixed64":  true,
+	"fixed32":  true,
+	"bool":     true,
+	"string":   true,
+	"uint32":   true,
+	"sfixed32": true,
+	"sfixed64": true,
+	"sint32":   true,
+	"sint64":   true,
+}
+
 func (r *resolver) resolveMessage(s *scope, msg *ast.Message) error {
 	ms := s.dup()
 	ms.push(msg)
 
 	// Resolve fields.
 	for _, field := range msg.Fields {
-		if ft, ok := fieldTypeInverseMap[field.TypeName]; ok {
-			// field is a primitive type
-			field.Type = ft
-			continue
-		}
-		// field must be a named type, message or enum
-		o := r.resolveName(ms, field.TypeName)
-		if o == nil {
+		ft, ok := r.resolveFieldTypeName(ms, field.TypeName)
+		if !ok {
 			return fmt.Errorf("failed to resolve name %q", field.TypeName)
 		}
-		field.Type = o.last()
-		log.Printf("(resolved %q to %q)", field.TypeName, o.fullName())
+		field.Type = ft
+
+		if ktn := field.KeyTypeName; ktn != "" {
+			if !validMapKeyTypes[ktn] {
+				return fmt.Errorf("invalid map key type %q", ktn)
+			}
+			field.KeyType = fieldTypeInverseMap[ktn]
+		}
 	}
 	// Resolve nested types.
 	for _, nmsg := range msg.Messages {
 		r.resolveMessage(ms, nmsg)
 	}
 	return nil
+}
+
+func (r *resolver) resolveFieldTypeName(s *scope, name string) (interface{}, bool) {
+	if ft, ok := fieldTypeInverseMap[name]; ok {
+		// field is a primitive type
+		return ft, true
+	}
+	// field must be a named type, message or enum
+	o := r.resolveName(s, name)
+	if o != nil {
+		log.Printf("(resolved %q to %q)", name, o.fullName())
+		return o.last(), true
+	}
+	return nil, false
 }
 
 func (r *resolver) resolveName(s *scope, name string) *scope {

@@ -73,6 +73,11 @@ type Field struct {
 	TypeName string
 	Type     interface{}
 
+	// For a map field, the TypeName/Type fields are the value type,
+	// and KeyTypeName/KeyType will be set.
+	KeyTypeName string
+	KeyType     FieldType
+
 	// At most one of {required,repeated} is set.
 	Required bool
 	Repeated bool

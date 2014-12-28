@@ -376,6 +376,29 @@ func (p *parser) readField(f *ast.Field) *parseError {
 		// nothing to do
 	case "repeated":
 		f.Repeated = true
+	case "map":
+		// map < Key , Value >
+		if err := p.readToken("<"); err != nil {
+			return err
+		}
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		f.KeyTypeName = tok.value // checked during resolution
+		if err := p.readToken(","); err != nil {
+			return err
+		}
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		f.TypeName = tok.value // checked during resolution
+		if err := p.readToken(">"); err != nil {
+			return err
+		}
+		f.Repeated = true // maps are repeated
+		goto parseFromFieldName
 	default:
 		// assume this is a type name
 		p.back()
@@ -387,6 +410,7 @@ func (p *parser) readField(f *ast.Field) *parseError {
 	}
 	f.TypeName = tok.value // checked during resolution
 
+parseFromFieldName:
 	tok = p.next()
 	if tok.err != nil {
 		return tok.err
@@ -614,7 +638,7 @@ func (p *parser) advance() {
 	p.cur.offset, p.cur.line = p.offset, p.line
 	switch p.s[0] {
 	// TODO: more cases, like punctuation.
-	case ';', '{', '}', '=', '[', ']', ',':
+	case ';', '{', '}', '=', '[', ']', ',', '<', '>':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
 	case '"', '\'':

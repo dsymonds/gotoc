@@ -94,11 +94,14 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 		Name: proto.String(m.Name),
 	}
 	for _, f := range m.Fields {
-		fdp, err := genField(f)
+		fdp, xdp, err := genField(f)
 		if err != nil {
 			return nil, err
 		}
 		dp.Field = append(dp.Field, fdp)
+		if xdp != nil {
+			dp.NestedType = append(dp.NestedType, xdp)
+		}
 	}
 	for _, nm := range m.Messages {
 		ndp, err := genMessage(nm)
@@ -124,7 +127,7 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 	return dp, nil
 }
 
-func genField(f *ast.Field) (*pb.FieldDescriptorProto, error) {
+func genField(f *ast.Field) (*pb.FieldDescriptorProto, *pb.DescriptorProto, error) {
 	fdp := &pb.FieldDescriptorProto{
 		Name:   proto.String(f.Name),
 		Number: proto.Int32(int32(f.Tag)),
@@ -138,11 +141,44 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, error) {
 		// default is optional
 		fdp.Label = pb.FieldDescriptorProto_LABEL_OPTIONAL.Enum()
 	}
+	if f.KeyTypeName != "" {
+		mname := camelCase(f.Name) + "Entry"
+		vmsg := &ast.Message{
+			Name: mname,
+			Fields: []*ast.Field{
+				{
+					TypeName: f.KeyTypeName,
+					Type:     f.KeyType,
+					Name:     "key",
+					Tag:      1,
+				},
+				{
+					TypeName: f.TypeName,
+					Type:     f.Type,
+					Name:     "value",
+					Tag:      2,
+				},
+			},
+			Up: f.Up,
+		}
+		vmsg.Fields[0].Up = vmsg
+		vmsg.Fields[1].Up = vmsg
+		xdp, err := genMessage(vmsg)
+		if err != nil {
+			return nil, nil, fmt.Errorf("internal error: %v", err)
+		}
+		xdp.Options = &pb.MessageOptions{
+			MapEntry: proto.Bool(true),
+		}
+		fdp.Type = pb.FieldDescriptorProto_TYPE_MESSAGE.Enum()
+		fdp.TypeName = proto.String(qualifiedName(vmsg))
+		return fdp, xdp, nil
+	}
 	switch t := f.Type.(type) {
 	case ast.FieldType:
 		pt, ok := fieldTypeMap[t]
 		if !ok {
-			return nil, fmt.Errorf("internal error: no mapping from ast.FieldType %v", t)
+			return nil, nil, fmt.Errorf("internal error: no mapping from ast.FieldType %v", t)
 		}
 		fdp.Type = pt.Enum()
 	case *ast.Message:
@@ -152,13 +188,13 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, error) {
 		fdp.Type = pb.FieldDescriptorProto_TYPE_ENUM.Enum()
 		fdp.TypeName = proto.String(qualifiedName(t))
 	default:
-		return nil, fmt.Errorf("internal error: bad ast.Field.Type type %T", f.Type)
+		return nil, nil, fmt.Errorf("internal error: bad ast.Field.Type type %T", f.Type)
 	}
 	if f.HasDefault {
 		fdp.DefaultValue = proto.String(f.Default)
 	}
 
-	return fdp, nil
+	return fdp, nil, nil
 }
 
 func genEnum(enum *ast.Enum) (*pb.EnumDescriptorProto, error) {
@@ -238,3 +274,12 @@ type int32Slice []int32
 func (s int32Slice) Len() int           { return len(s) }
 func (s int32Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s int32Slice) Less(i, j int) bool { return s[i] < s[j] }
+
+// camelCase turns foo_bar into FooBar.
+func camelCase(s string) string {
+	words := strings.Split(s, "_")
+	for i, word := range words {
+		words[i] = strings.Title(word)
+	}
+	return strings.Join(words, "")
+}

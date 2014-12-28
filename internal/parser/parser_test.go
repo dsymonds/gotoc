@@ -200,6 +200,21 @@ var parseTests = []parseTest{
 		}
 		`,
 	},
+	// TODO: FieldOptions
+	{
+		"Maps",
+		"message TestMessage {\n  map<int32, string> primitive_type_map = 1;\n}\n",
+		`message_type {
+		   name: "TestMessage"
+		   nested_type {
+		     name: "PrimitiveTypeMapEntry"
+		     field { name: "key" number: 1 label:LABEL_OPTIONAL type:TYPE_INT32 }
+		     field { name: "value" number: 2 label:LABEL_OPTIONAL type:TYPE_STRING }
+		     options { map_entry: true }
+		   }
+		   field { name: "primitive_type_map" label: LABEL_REPEATED type:TYPE_MESSAGE type_name: ".TestMessage.PrimitiveTypeMapEntry" number: 1 }
+		}`,
+	},
 	{
 		"NestedMessage",
 		"message TestMessage {\n  message Nested {}\n  optional Nested test_nested = 1;\n  }\n",
