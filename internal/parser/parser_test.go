@@ -60,6 +60,11 @@ var parseTests = []parseTest{
 		`message_type { name: "TestMessage" field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:1 } }`,
 	},
 	{
+		"ImplicitSyntaxIdentifier",
+		"message TestMessage {\n  required int32 foo = 1;\n}\n",
+		`message_type { name: "TestMessage"  field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:1 } }`,
+	},
+	{
 		"ExplicitSyntaxIdentifier",
 		"syntax = \"proto2\";\nmessage TestMessage {\n  required int32 foo = 1;\n}\n",
 		`message_type { name: "TestMessage" field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32 number:1 } }`,
@@ -73,6 +78,44 @@ var parseTests = []parseTest{
 		   field { name:"bar" label:LABEL_OPTIONAL type:TYPE_INT32 number:34 }
 		   field { name:"baz" label:LABEL_REPEATED type:TYPE_INT32 number:3  }
 		 }`,
+	},
+	{
+		"PrimitiveFieldTypes",
+		`message TestMessage {
+		   required int32    foo = 1;
+		   required int64    foo = 1;
+		   required uint32   foo = 1;
+		   required uint64   foo = 1;
+		   required sint32   foo = 1;
+		   required sint64   foo = 1;
+		   required fixed32  foo = 1;
+		   required fixed64  foo = 1;
+		   required sfixed32 foo = 1;
+		   required sfixed64 foo = 1;
+		   required float    foo = 1;
+		   required double   foo = 1;
+		   required string   foo = 1;
+		   required bytes    foo = 1;
+		   required bool     foo = 1;
+		}`,
+		`message_type {
+		   name: "TestMessage"
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT32    number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_INT64    number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_UINT32   number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_UINT64   number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_SINT32   number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_SINT64   number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_FIXED32  number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_FIXED64  number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_SFIXED32 number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_SFIXED64 number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_FLOAT    number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_DOUBLE   number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_STRING   number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_BYTES    number:1 }
+		   field { name:"foo" label:LABEL_REQUIRED type:TYPE_BOOL     number:1 }
+		}`,
 	},
 	{
 		"FieldDefaults",
