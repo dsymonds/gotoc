@@ -6,7 +6,7 @@ This is **only** the parser side; you will need a plugin to generate code.
 
 License
 -------
-This is licensed under the [BSD 3-Clause Licence](http://www.opensource.org/licenses/bsd-license.php).
+This is licensed under the [BSD 3-Clause Licence](http://opensource.org/licenses/BSD-3-Clause).
 See the LICENSE file for more details.
 
 Read more
