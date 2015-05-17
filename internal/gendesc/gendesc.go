@@ -52,6 +52,13 @@ func genFile(f *ast.File) (*pb.FileDescriptorProto, error) {
 		}
 		fdp.EnumType = append(fdp.EnumType, edp)
 	}
+	for _, srv := range f.Services {
+		sdp, err := genService(srv)
+		if err != nil {
+			return nil, err
+		}
+		fdp.Service = append(fdp.Service, sdp)
+	}
 	for _, opt := range f.Options {
 		if fdp.Options == nil {
 			fdp.Options = new(pb.FileOptions)
@@ -214,6 +221,29 @@ func genEnum(enum *ast.Enum) (*pb.EnumDescriptorProto, error) {
 		})
 	}
 	return edp, nil
+}
+
+func genService(srv *ast.Service) (*pb.ServiceDescriptorProto, error) {
+	sdp := &pb.ServiceDescriptorProto{
+		Name: proto.String(srv.Name),
+	}
+	for _, mth := range srv.Methods {
+		mdp, err := genMethod(mth)
+		if err != nil {
+			return nil, err
+		}
+		sdp.Method = append(sdp.Method, mdp)
+	}
+	return sdp, nil
+}
+
+func genMethod(mth *ast.Method) (*pb.MethodDescriptorProto, error) {
+	mdp := &pb.MethodDescriptorProto{
+		Name:       proto.String(mth.Name),
+		InputType:  proto.String(qualifiedName(mth.InType)),
+		OutputType: proto.String(qualifiedName(mth.OutType)),
+	}
+	return mdp, nil
 }
 
 // qualifiedName returns the fully-qualified name of x,

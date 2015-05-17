@@ -225,6 +225,14 @@ func (p *parser) readFile(f *ast.File) *parseError {
 				return err
 			}
 			enum.Up = f
+		case "service":
+			p.back()
+			srv := new(ast.Service)
+			f.Services = append(f.Services, srv)
+			if err := p.readService(srv); err != nil {
+				return err
+			}
+			srv.Up = f
 		default:
 			return p.errorf("unknown top-level thing %q", tok.value)
 		}
@@ -607,6 +615,83 @@ func (p *parser) readEnum(enum *ast.Enum) *parseError {
 	return p.errorf("unexpected EOF while parsing enum")
 }
 
+func (p *parser) readService(srv *ast.Service) *parseError {
+	if err := p.readToken("service"); err != nil {
+		return err
+	}
+	srv.Position = p.cur.astPosition()
+
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	srv.Name = tok.value // TODO: validate
+
+	if err := p.readToken("{"); err != nil {
+		return err
+	}
+
+	// Parse methods
+	for !p.done {
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		switch tok.value {
+		case "}":
+			// end of service
+			return nil
+		case "rpc":
+			// handled below
+		default:
+			return p.errorf(`got %q, want "rpc" or "}"`, tok.value)
+		}
+
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		mth := new(ast.Method)
+		srv.Methods = append(srv.Methods, mth)
+		mth.Position = tok.astPosition()
+		mth.Name = tok.value // TODO: validate
+		mth.Up = srv
+
+		if err := p.readToken("("); err != nil {
+			return err
+		}
+
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		mth.InTypeName = tok.value // TODO: validate
+		if err := p.readToken(")"); err != nil {
+			return err
+		}
+		if err := p.readToken("returns"); err != nil {
+			return err
+		}
+		if err := p.readToken("("); err != nil {
+			return err
+		}
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		mth.OutTypeName = tok.value // TODO: validate
+
+		if err := p.readToken(")"); err != nil {
+			return err
+		}
+		if err := p.readToken(";"); err != nil {
+			return err
+		}
+	}
+
+	return p.errorf("unexpected EOF while parsing service")
+}
+
 func (p *parser) readString() (*token, *parseError) {
 	tok := p.next()
 	if tok.err != nil {
@@ -665,7 +750,7 @@ func (p *parser) advance() {
 	p.cur.offset, p.cur.line = p.offset, p.line
 	switch p.s[0] {
 	// TODO: more cases, like punctuation.
-	case ';', '{', '}', '=', '[', ']', ',', '<', '>':
+	case ';', '{', '}', '=', '[', ']', ',', '<', '>', '(', ')':
 		// Single symbol
 		p.cur.value, p.s = p.s[:1], p.s[1:]
 	case '"', '\'':

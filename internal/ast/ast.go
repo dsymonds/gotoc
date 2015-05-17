@@ -32,6 +32,7 @@ type File struct {
 
 	Messages []*Message // top-level messages
 	Enums    []*Enum    // top-level enums
+	Services []*Service // services
 
 	Comments []*Comment // all the comments for this file, sorted by position
 }
@@ -175,6 +176,37 @@ type EnumValue struct {
 
 func (ev *EnumValue) Pos() Position { return ev.Position }
 func (ev *EnumValue) File() *File   { return ev.Up.File() }
+
+// Service represents an RPC service.
+type Service struct {
+	Position Position // position of the "service" token
+	Name     string
+
+	Methods []*Method
+
+	Up *File
+}
+
+func (s *Service) Pos() Position { return s.Position }
+func (s *Service) File() *File   { return s.Up }
+
+// Method represents an RPC method.
+type Method struct {
+	Position Position // position of the "rpc" token
+	Name     string
+
+	// InTypeName/OutTypeName are the raw names parsed from the input.
+	// InType/OutType is set during resolution; it will be a *Message.
+	InTypeName, OutTypeName string
+	InType, OutType         interface{}
+
+	// TODO: support streaming methods
+
+	Up *Service
+}
+
+func (m *Method) Pos() Position { return m.Position }
+func (m *Method) File() *File   { return m.Up.Up }
 
 // Comment represents a comment.
 type Comment struct {

@@ -264,6 +264,12 @@ var parseTests = []parseTest{
 		`enum_type { name: "TestEnum" value { name:"FOO" number:13 } value { name:"BAR" number:-10 } value { name:"BAZ" number:500 } }`,
 	},
 	{
+		"SimpleService",
+		"service TestService {\n  rpc Foo(In) returns (Out);\n}\n message In{} message Out{}",
+		`service { name: "TestService" method { name:"Foo" input_type:".In" output_type:".Out" } }` +
+			`message_type:{name:"In"} message_type:{name:"Out"}`,
+	},
+	{
 		"ParseImport",
 		"import \"foo/bar/baz.proto\";\n",
 		`dependency: "foo/bar/baz.proto"`,

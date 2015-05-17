@@ -128,6 +128,14 @@ func (r *resolver) resolveFile(s *scope, f *ast.File) error {
 			return fmt.Errorf("(%v): %v", msg.Name, err)
 		}
 	}
+	// Resolve messages in services.
+	for _, srv := range f.Services {
+		for _, mth := range srv.Methods {
+			if err := r.resolveMethod(fs, mth); err != nil {
+				return fmt.Errorf("(%s.%s): %v", srv.Name, mth.Name, err)
+			}
+		}
+	}
 
 	// TODO: resolve other types.
 
@@ -195,6 +203,22 @@ func (r *resolver) resolveFieldTypeName(s *scope, name string) (interface{}, boo
 		return o.last(), true
 	}
 	return nil, false
+}
+
+func (r *resolver) resolveMethod(s *scope, mth *ast.Method) error {
+	o := r.resolveName(s, mth.InTypeName)
+	if o == nil {
+		return fmt.Errorf("failed to resolve name %q", mth.InTypeName)
+	}
+	mth.InType = o.last()
+
+	o = r.resolveName(s, mth.OutTypeName)
+	if o == nil {
+		return fmt.Errorf("failed to resolve name %q", mth.OutTypeName)
+	}
+	mth.OutType = o.last()
+
+	return nil
 }
 
 func (r *resolver) resolveName(s *scope, name string) *scope {
