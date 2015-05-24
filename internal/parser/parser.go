@@ -620,6 +620,10 @@ func (p *parser) readEnum(enum *ast.Enum) *parseError {
 		}
 		if tok.value == "}" {
 			// end of enum
+			// A semicolon after an enum is optional.
+			if err := p.readToken(";"); err != nil {
+				p.back()
+			}
 			return nil
 		}
 		// TODO: verify tok.value is a valid enum value name.
