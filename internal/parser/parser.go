@@ -6,6 +6,8 @@ package parser
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode"
@@ -14,7 +16,10 @@ import (
 )
 
 func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) {
-	// TODO: Use importPaths
+	// Force importPaths to have at least one element.
+	if len(importPaths) == 0 {
+		importPaths = []string{"."}
+	}
 
 	fset := new(ast.FileSet)
 
@@ -31,9 +36,21 @@ func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) 
 		index[filename] = len(fset.Files)
 		fset.Files = append(fset.Files, f)
 
-		buf, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, err
+		// Read the first existing file relative to an element of importPaths.
+		var buf []byte
+		for _, impPath := range importPaths {
+			b, err := ioutil.ReadFile(filepath.Join(impPath, filename))
+			if err != nil {
+				if os.IsNotExist(err) {
+					continue
+				}
+				return nil, err
+			}
+			buf = b
+			break
+		}
+		if buf == nil {
+			return nil, fmt.Errorf("file not found: %s", filename)
 		}
 
 		p := newParser(filename, string(buf))
