@@ -233,6 +233,14 @@ func (p *parser) readFile(f *ast.File) *parseError {
 				return err
 			}
 			srv.Up = f
+		case "extend":
+			p.back()
+			ext := new(ast.Extension)
+			f.Extensions = append(f.Extensions, ext)
+			if err := p.readExtension(ext); err != nil {
+				return err
+			}
+			ext.Up = f
 		default:
 			return p.errorf("unknown top-level thing %q", tok.value)
 		}
@@ -325,6 +333,15 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 			return tok.err
 		}
 		switch tok.value {
+		case "extend":
+			// extension
+			p.back()
+			ext := new(ast.Extension)
+			msg.Extensions = append(msg.Extensions, ext)
+			if err := p.readExtension(ext); err != nil {
+				return err
+			}
+			ext.Up = msg
 		case "message":
 			// nested message
 			p.back()
@@ -371,6 +388,8 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 }
 
 func (p *parser) readField(f *ast.Field) *parseError {
+	_, inMsg := f.Up.(*ast.Message)
+
 	// look for required/optional/repeated
 	tok := p.next()
 	if tok.err != nil {
@@ -435,7 +454,7 @@ parseFromFieldName:
 	}
 	f.Tag = tag
 
-	if f.TypeName == "group" {
+	if f.TypeName == "group" && inMsg {
 		if err := p.readToken("{"); err != nil {
 			return err
 		}
@@ -451,7 +470,8 @@ parseFromFieldName:
 			return err
 		}
 		f.TypeName = f.Name
-		f.Up.Messages = append(f.Up.Messages, group) // ugh
+		msg := f.Up.(*ast.Message)
+		msg.Messages = append(msg.Messages, group) // ugh
 		if err := p.readToken("}"); err != nil {
 			return err
 		}
@@ -690,6 +710,42 @@ func (p *parser) readService(srv *ast.Service) *parseError {
 	}
 
 	return p.errorf("unexpected EOF while parsing service")
+}
+
+func (p *parser) readExtension(ext *ast.Extension) *parseError {
+	if err := p.readToken("extend"); err != nil {
+		return err
+	}
+	ext.Position = p.cur.astPosition()
+
+	tok := p.next()
+	if tok.err != nil {
+		return tok.err
+	}
+	ext.Extendee = tok.value // checked during resolution
+
+	if err := p.readToken("{"); err != nil {
+		return err
+	}
+
+	for !p.done {
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		if tok.value == "}" {
+			// end of extension
+			return nil
+		}
+		p.back()
+		field := new(ast.Field)
+		ext.Fields = append(ext.Fields, field)
+		field.Up = ext // p.readFile uses this
+		if err := p.readField(field); err != nil {
+			return err
+		}
+	}
+	return p.errorf("unexpected EOF while parsing extension")
 }
 
 func (p *parser) readString() (*token, *parseError) {

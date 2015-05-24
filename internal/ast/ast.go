@@ -30,19 +30,21 @@ type File struct {
 	Imports       []string
 	PublicImports []int // list of indexes in the Imports slice
 
-	Messages []*Message // top-level messages
-	Enums    []*Enum    // top-level enums
-	Services []*Service // services
+	Messages   []*Message   // top-level messages
+	Enums      []*Enum      // top-level enums
+	Services   []*Service   // services
+	Extensions []*Extension // top-level extensions
 
 	Comments []*Comment // all the comments for this file, sorted by position
 }
 
 // Message represents a proto message.
 type Message struct {
-	Position Position // position of the "message" token
-	Name     string
-	Group    bool
-	Fields   []*Field
+	Position   Position // position of the "message" token
+	Name       string
+	Group      bool
+	Fields     []*Field
+	Extensions []*Extension
 
 	Messages []*Message // includes groups
 	Enums    []*Enum
@@ -89,7 +91,7 @@ type Field struct {
 	HasDefault bool
 	Default    string // e.g. "foo", 7, true
 
-	Up *Message
+	Up Node // either *Message or *Extension
 }
 
 func (f *Field) Pos() Position { return f.Position }
@@ -207,6 +209,31 @@ type Method struct {
 
 func (m *Method) Pos() Position { return m.Position }
 func (m *Method) File() *File   { return m.Up.Up }
+
+// Extension represents an extension definition.
+type Extension struct {
+	Position Position // position of the "extend" token
+
+	Extendee     string   // the thing being extended
+	ExtendeeType *Message // set during resolution
+
+	Fields []*Field
+
+	Up interface{} // either *File or *Message or ...
+}
+
+func (e *Extension) Pos() Position { return e.Position }
+func (e *Extension) File() *File {
+	switch up := e.Up.(type) {
+	case *File:
+		return up
+	case *Message:
+		return up.File()
+	default:
+		log.Panicf("internal error: Extension.Up is a %T", up)
+	}
+	panic("unreachable")
+}
 
 // Comment represents a comment.
 type Comment struct {

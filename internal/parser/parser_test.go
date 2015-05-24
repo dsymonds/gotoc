@@ -251,6 +251,36 @@ var parseTests = []parseTest{
 			`}`,
 	},
 	{
+		"Extensions",
+		"extend Extendee1 { optional int32 foo = 12; }\nextend Extendee2 { repeated TestMessage bar = 22; }\n" +
+			"message Extendee1 { extensions 12; } message Extendee2 { extensions 20 to 24; } message TestMessage{}",
+		`extension { name:"foo" label:LABEL_OPTIONAL type:TYPE_INT32 number:12 extendee: ".Extendee1" } ` +
+			`extension { name:"bar" label:LABEL_REPEATED number:22 type:TYPE_MESSAGE type_name:".TestMessage" extendee: ".Extendee2" }` +
+			`message_type{name:"Extendee1" extension_range{start:12 end:13} } ` +
+			`message_type{name:"Extendee2" extension_range{start:20 end:25} } ` +
+			`message_type{name:"TestMessage"}`,
+	},
+	{
+		"ExtensionsInMessageScope",
+		"message TestMessage {\n  extend Extendee1 { optional int32 foo = 12; }\n  extend Extendee2 { repeated TestMessage bar = 22; }\n}\n" +
+			"message Extendee1 { extensions 12; } message Extendee2 { extensions 20 to 24; }",
+		`message_type {  name: "TestMessage"` +
+			`  extension { name:"foo" label:LABEL_OPTIONAL type:TYPE_INT32 number:12 extendee: ".Extendee1" }` +
+			`  extension { name:"bar" label:LABEL_REPEATED number:22 type:TYPE_MESSAGE type_name:".TestMessage" extendee: ".Extendee2" }` +
+			`}` +
+			`message_type{name:"Extendee1" extension_range{start:12 end:13} } ` +
+			`message_type{name:"Extendee2" extension_range{start:20 end:25} } `,
+	},
+	{
+		"MultipleExtensionsOneExtendee",
+		"extend Extendee1 {\n  optional int32 foo = 12;\n  repeated TestMessage bar = 22;\n}\n" +
+			"message Extendee1 { extensions 12 to 24; } message TestMessage{}",
+		`extension { name:"foo" label:LABEL_OPTIONAL type:TYPE_INT32 number:12 extendee: ".Extendee1" } ` +
+			`extension { name:"bar" label:LABEL_REPEATED number:22 type:TYPE_MESSAGE type_name:".TestMessage" extendee: ".Extendee1" }` +
+			`message_type{name:"Extendee1" extension_range{start:12 end:25} } ` +
+			`message_type{name:"TestMessage"}`,
+	},
+	{
 		"OptionalOptionalLabelProto3",
 		"syntax = \"proto3\";\nmessage TestMessage {\n  int32 foo = 1;\n  optional int32 bar = 2;\n}\n",
 		`syntax: "proto3" message_type { name: "TestMessage" ` +

@@ -59,6 +59,13 @@ func genFile(f *ast.File) (*pb.FileDescriptorProto, error) {
 		}
 		fdp.Service = append(fdp.Service, sdp)
 	}
+	for _, ext := range f.Extensions {
+		fdps, err := genExtension(ext)
+		if err != nil {
+			return nil, err
+		}
+		fdp.Extension = append(fdp.Extension, fdps...)
+	}
 	for _, opt := range f.Options {
 		if fdp.Options == nil {
 			fdp.Options = new(pb.FileOptions)
@@ -109,6 +116,13 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 		if xdp != nil {
 			dp.NestedType = append(dp.NestedType, xdp)
 		}
+	}
+	for _, ext := range m.Extensions {
+		fdps, err := genExtension(ext)
+		if err != nil {
+			return nil, err
+		}
+		dp.Extension = append(dp.Extension, fdps...)
 	}
 	for _, nm := range m.Messages {
 		ndp, err := genMessage(nm)
@@ -203,6 +217,9 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, *pb.DescriptorProto, erro
 	default:
 		return nil, nil, fmt.Errorf("internal error: bad ast.Field.Type type %T", f.Type)
 	}
+	if ext, ok := f.Up.(*ast.Extension); ok {
+		fdp.Extendee = proto.String(qualifiedName(ext.ExtendeeType))
+	}
 	if f.HasDefault {
 		fdp.DefaultValue = proto.String(f.Default)
 	}
@@ -244,6 +261,19 @@ func genMethod(mth *ast.Method) (*pb.MethodDescriptorProto, error) {
 		OutputType: proto.String(qualifiedName(mth.OutType)),
 	}
 	return mdp, nil
+}
+
+func genExtension(ext *ast.Extension) ([]*pb.FieldDescriptorProto, error) {
+	var fdps []*pb.FieldDescriptorProto
+	for _, f := range ext.Fields {
+		// TODO: It should be impossible to get a map field?
+		fdp, _, err := genField(f)
+		if err != nil {
+			return nil, err
+		}
+		fdps = append(fdps, fdp)
+	}
+	return fdps, nil
 }
 
 // qualifiedName returns the fully-qualified name of x,

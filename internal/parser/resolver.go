@@ -136,6 +136,12 @@ func (r *resolver) resolveFile(s *scope, f *ast.File) error {
 			}
 		}
 	}
+	// Resolve types in extensions.
+	for _, ext := range f.Extensions {
+		if err := r.resolveExtension(fs, ext); err != nil {
+			return fmt.Errorf("(ext %s): %v", ext.Extendee, err)
+		}
+	}
 
 	// TODO: resolve other types.
 
@@ -184,9 +190,17 @@ func (r *resolver) resolveMessage(s *scope, msg *ast.Message) error {
 			field.KeyType = fieldTypeInverseMap[ktn]
 		}
 	}
+	// Resolve types in extensions.
+	for _, ext := range msg.Extensions {
+		if err := r.resolveExtension(ms, ext); err != nil {
+			return err
+		}
+	}
 	// Resolve nested types.
 	for _, nmsg := range msg.Messages {
-		r.resolveMessage(ms, nmsg)
+		if err := r.resolveMessage(ms, nmsg); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -218,6 +232,29 @@ func (r *resolver) resolveMethod(s *scope, mth *ast.Method) error {
 	}
 	mth.OutType = o.last()
 
+	return nil
+}
+
+func (r *resolver) resolveExtension(s *scope, ext *ast.Extension) error {
+	o := r.resolveName(s, ext.Extendee)
+	if o == nil {
+		return fmt.Errorf("failed to resolve name %q", ext.Extendee)
+	}
+	m, ok := o.last().(*ast.Message)
+	if !ok {
+		return fmt.Errorf("extendee %q resolved to non-message %T", ext.Extendee, o.last())
+	}
+	ext.ExtendeeType = m
+	// Resolve fields.
+	for _, field := range ext.Fields {
+		ft, ok := r.resolveFieldTypeName(s, field.TypeName)
+		if !ok {
+			return fmt.Errorf("failed to resolve name %q", field.TypeName)
+		}
+		field.Type = ft
+
+		// TODO: Map fields should be forbidden?
+	}
 	return nil
 }
 
