@@ -91,6 +91,9 @@ type Field struct {
 	HasDefault bool
 	Default    string // e.g. "foo", 7, true
 
+	HasPacked bool
+	Packed    bool
+
 	Up Node // either *Message or *Extension
 }
 

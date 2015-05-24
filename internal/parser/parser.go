@@ -500,27 +500,8 @@ parseFromFieldName:
 	}
 
 	if err := p.readToken("["); err == nil {
-		// start of options
-		// TODO: support more than just default
-		if err := p.readToken("default"); err != nil {
-			return err
-		}
-		f.HasDefault = true
-		if err := p.readToken("="); err != nil {
-			return err
-		}
-		tok := p.next()
-		if tok.err != nil {
-			return tok.err
-		}
-		// TODO: check type
-		switch f.TypeName {
-		case "string":
-			f.Default = tok.unquoted
-		default:
-			f.Default = tok.value
-		}
-		if err := p.readToken("]"); err != nil {
+		p.back()
+		if err := p.readFieldOptions(f); err != nil {
 			return err
 		}
 	} else {
@@ -531,6 +512,62 @@ parseFromFieldName:
 		return err
 	}
 	return nil
+}
+
+func (p *parser) readFieldOptions(f *ast.Field) *parseError {
+	if err := p.readToken("["); err != nil {
+		return err
+	}
+	for !p.done {
+		tok := p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		// TODO: support more options than just default and packed
+		switch tok.value {
+		case "default":
+			f.HasDefault = true
+			if err := p.readToken("="); err != nil {
+				return err
+			}
+			tok := p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			// TODO: check type
+			switch f.TypeName {
+			case "string":
+				f.Default = tok.unquoted
+			default:
+				f.Default = tok.value
+			}
+		case "packed":
+			f.HasPacked = true
+			if err := p.readToken("="); err != nil {
+				return err
+			}
+			packed, err := p.readBool()
+			if err != nil {
+				return err
+			}
+			f.Packed = packed
+		default:
+			return p.errorf(`got %q, want "default" or "packed"`, tok.value)
+		}
+		// next should be a comma or ]
+		tok = p.next()
+		if tok.err != nil {
+			return tok.err
+		}
+		if tok.value == "," {
+			continue
+		}
+		if tok.value == "]" {
+			return nil
+		}
+		return p.errorf(`got %q, want "," or "]"`, tok.value)
+	}
+	return p.errorf("unexpected EOF while parsing field options")
 }
 
 func (p *parser) readExtensionRange() ([][2]int, *parseError) {
@@ -778,6 +815,22 @@ func (p *parser) readString() (*token, *parseError) {
 		return nil, p.errorf("got %q, want string", tok.value)
 	}
 	return tok, nil
+}
+
+func (p *parser) readBool() (bool, *parseError) {
+	tok := p.next()
+	if tok.err != nil {
+		return false, tok.err
+	}
+	// TODO: check which values for bools are valid.
+	switch tok.value {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	default:
+		return false, p.errorf(`got %q, want "true" or "false"`, tok.value)
+	}
 }
 
 func (p *parser) readToken(want string) *parseError {
