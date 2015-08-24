@@ -45,6 +45,7 @@ type Message struct {
 	Group      bool
 	Fields     []*Field
 	Extensions []*Extension
+	Oneofs     []*Oneof
 
 	Messages []*Message // includes groups
 	Enums    []*Enum
@@ -66,6 +67,14 @@ func (m *Message) File() *File {
 			log.Panicf("internal error: Message.Up is a %T", up)
 		}
 	}
+}
+
+// Oneof represents a oneof bracketing a set of fields in a message.
+type Oneof struct {
+	Position Position // position of "oneof" token
+	Name     string
+
+	Up *Message
 }
 
 // Field represents a field in a message.
@@ -93,6 +102,8 @@ type Field struct {
 
 	HasPacked bool
 	Packed    bool
+
+	Oneof *Oneof
 
 	Up Node // either *Message or *Extension
 }

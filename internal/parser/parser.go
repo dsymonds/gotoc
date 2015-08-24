@@ -353,6 +353,7 @@ func (p *parser) readMessage(msg *ast.Message) *parseError {
 
 func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 	// Parse message fields and other things inside a message.
+	var oneof *ast.Oneof // set while inside a oneof
 	for !p.done {
 		tok := p.next()
 		if tok.err != nil {
@@ -368,6 +369,25 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 				return err
 			}
 			ext.Up = msg
+		case "oneof":
+			// oneof
+			if oneof != nil {
+				return p.errorf("nested oneof not permitted")
+			}
+			oneof = new(ast.Oneof)
+			msg.Oneofs = append(msg.Oneofs, oneof)
+			oneof.Position = p.cur.astPosition()
+
+			tok := p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			oneof.Name = tok.value // TODO: validate
+			oneof.Up = msg
+
+			if err := p.readToken("{"); err != nil {
+				return err
+			}
 		case "message":
 			// nested message
 			p.back()
@@ -400,11 +420,17 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 			p.back()
 			field := new(ast.Field)
 			msg.Fields = append(msg.Fields, field)
+			field.Oneof = oneof
 			field.Up = msg // p.readField uses this
 			if err := p.readField(field); err != nil {
 				return err
 			}
 		case "}":
+			if oneof != nil {
+				// end of oneof
+				oneof = nil
+				continue
+			}
 			// end of message
 			p.back()
 			return nil
@@ -415,6 +441,8 @@ func (p *parser) readMessageContents(msg *ast.Message) *parseError {
 
 func (p *parser) readField(f *ast.Field) *parseError {
 	_, inMsg := f.Up.(*ast.Message)
+
+	// TODO: enforce type limitations if f.Oneof != nil
 
 	// look for required/optional/repeated
 	tok := p.next()

@@ -145,6 +145,11 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 			End:   proto.Int32(int32(r[1] + 1)),
 		})
 	}
+	for _, oo := range m.Oneofs {
+		dp.OneofDecl = append(dp.OneofDecl, &pb.OneofDescriptorProto{
+			Name: proto.String(oo.Name),
+		})
+	}
 	return dp, nil
 }
 
@@ -222,6 +227,16 @@ func genField(f *ast.Field) (*pb.FieldDescriptorProto, *pb.DescriptorProto, erro
 	}
 	if f.HasDefault {
 		fdp.DefaultValue = proto.String(f.Default)
+	}
+	if f.Oneof != nil {
+		n := 0
+		for _, oo := range f.Oneof.Up.Oneofs {
+			if oo == f.Oneof {
+				break
+			}
+			n++
+		}
+		fdp.OneofIndex = proto.Int(n)
 	}
 
 	return fdp, nil, nil

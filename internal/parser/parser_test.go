@@ -202,6 +202,41 @@ var parseTests = []parseTest{
 	},
 	// TODO: FieldOptions
 	{
+		"Oneof",
+		"message TestMessage {\n  oneof foo {\n    int32 a = 1;\n    string b = 2;\n    TestMessage c = 3;\n    group D = 4 { optional int32 i = 5; }\n  }\n}\n",
+		`message_type {
+		  name: "TestMessage"
+		  field { name:"a" label:LABEL_OPTIONAL type:TYPE_INT32 number:1 oneof_index:0 }
+		  field { name:"b" label:LABEL_OPTIONAL type:TYPE_STRING number:2 oneof_index:0 }
+		  field { name:"c" label:LABEL_OPTIONAL type:TYPE_MESSAGE type_name:".TestMessage" number:3 oneof_index:0 }
+		  field { name:"d" label:LABEL_OPTIONAL type:TYPE_GROUP type_name:".TestMessage.D" number:4 oneof_index:0 }
+		  oneof_decl {
+		    name: "foo"
+		  }
+		  nested_type {
+		    name: "D"
+		    field { name:"i" label:LABEL_OPTIONAL type:TYPE_INT32 number:5 }
+		  }
+		}`,
+	},
+	{
+		"MultipleOneofs",
+		"message TestMessage {\n  oneof foo {\n    int32 a = 1;\n    string b = 2;\n  }\n  oneof bar {\n    int32 c = 3;\n    string d = 4;\n  }\n}\n",
+		`message_type {
+		  name: "TestMessage"
+		  field { name:"a" label:LABEL_OPTIONAL type:TYPE_INT32 number:1 oneof_index:0 }
+		  field { name:"b" label:LABEL_OPTIONAL type:TYPE_STRING number:2 oneof_index:0 }
+		  field { name:"c" label:LABEL_OPTIONAL type:TYPE_INT32 number:3 oneof_index:1 }
+		  field { name:"d" label:LABEL_OPTIONAL type:TYPE_STRING number:4 oneof_index:1 }
+		  oneof_decl {
+		    name: "foo"
+		  }
+		  oneof_decl {
+		    name: "bar"
+		  }
+		}`,
+	},
+	{
 		"Maps",
 		"message TestMessage {\n  map<int32, string> primitive_type_map = 1;\n}\n",
 		`message_type {
