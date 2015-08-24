@@ -6,6 +6,7 @@ package parser
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,6 +15,14 @@ import (
 
 	"github.com/dsymonds/gotoc/internal/ast"
 )
+
+const debugging = false
+
+func debugf(format string, args ...interface{}) {
+	if debugging {
+		log.Printf(format, args...)
+	}
+}
 
 func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) {
 	// Force importPaths to have at least one element.
@@ -846,10 +855,15 @@ func (p *parser) readToken(want string) *parseError {
 
 // Back off the parser by one token; may only be done between calls to p.next().
 func (p *parser) back() {
-	//log.Printf("parser·back(): backed %q [err: %v]", p.cur.value, p.cur.err)
+	debugf("parser·back(): backed %q [err: %v]", p.cur.value, p.cur.err)
 	p.done = false // in case this was the last token
 	p.backed = true
-	p.cur.err = nil // in case an error was being recovered
+	// In case an error was being recovered, ignore any error.
+	// Don't do this for EOF, though, since we know that's what
+	// we'll return next.
+	if p.cur.err != eof {
+		p.cur.err = nil // in case an error was being recovered
+	}
 }
 
 // Advances the parser and returns the new current token.
@@ -858,13 +872,13 @@ func (p *parser) next() *token {
 		p.backed = false
 	} else {
 		p.advance()
-		//log.Printf("parser·next(): advanced to %q [err: %v]", p.cur.value, p.cur.err)
+		debugf("parser·next(): advanced to %q [err: %v]", p.cur.value, p.cur.err)
 		if p.done && p.cur.err == nil {
 			p.cur.value = ""
 			p.cur.err = eof
 		}
 	}
-	//log.Printf("parser·next(): returning %q [err: %v]", p.cur.value, p.cur.err)
+	debugf("parser·next(): returning %q [err: %v]", p.cur.value, p.cur.err)
 	return &p.cur
 }
 
