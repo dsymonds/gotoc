@@ -1,3 +1,8 @@
+/*
+gotoc is a protocol buffer compiler. It reads and parses .proto files,
+and produces output that can be consumed by a protoc-compatible plugin
+(such as protoc-gen-go) to produce generated code.
+*/
 package main
 
 import (

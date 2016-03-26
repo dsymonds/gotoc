@@ -24,6 +24,11 @@ func debugf(format string, args ...interface{}) {
 	}
 }
 
+// ParseFiles parses one or more files.
+// The files should generally consist of one package.
+// Any .proto files that these files import should be discoverable
+// relative to an element of importPaths; if importPaths is empty
+// then the current directory is searched.
 func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) {
 	// Force importPaths to have at least one element.
 	if len(importPaths) == 0 {
