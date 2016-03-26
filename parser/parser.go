@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/dsymonds/gotoc/internal/ast"
+	"github.com/dsymonds/gotoc/ast"
 )
 
 const debugging = false

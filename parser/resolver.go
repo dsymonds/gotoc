@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dsymonds/gotoc/internal/ast"
+	"github.com/dsymonds/gotoc/ast"
 )
 
 func resolveSymbols(fset *ast.FileSet) error {

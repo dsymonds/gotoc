@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	"github.com/dsymonds/gotoc/internal/ast"
-	"github.com/dsymonds/gotoc/internal/gendesc"
+	"github.com/dsymonds/gotoc/ast"
+	"github.com/dsymonds/gotoc/gendesc"
 	"github.com/golang/protobuf/proto"
 	pb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
