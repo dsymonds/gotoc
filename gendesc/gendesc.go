@@ -107,6 +107,7 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 	dp := &pb.DescriptorProto{
 		Name: proto.String(m.Name),
 	}
+	var extraNested []*pb.DescriptorProto
 	for _, f := range m.Fields {
 		fdp, xdp, err := genField(f)
 		if err != nil {
@@ -114,7 +115,7 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 		}
 		dp.Field = append(dp.Field, fdp)
 		if xdp != nil {
-			dp.NestedType = append(dp.NestedType, xdp)
+			extraNested = append(extraNested, xdp)
 		}
 	}
 	for _, ext := range m.Extensions {
@@ -131,6 +132,9 @@ func genMessage(m *ast.Message) (*pb.DescriptorProto, error) {
 		}
 		dp.NestedType = append(dp.NestedType, ndp)
 	}
+	// Put extra nested DescriptorProtos (e.g. from a map field)
+	// at the end so they don't disrupt message indexes.
+	dp.NestedType = append(dp.NestedType, extraNested...)
 	for _, ne := range m.Enums {
 		edp, err := genEnum(ne)
 		if err != nil {
