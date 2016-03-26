@@ -1,5 +1,7 @@
 // Just the basics
 
+syntax = "proto2";
+
 message A {
   required int32 a = 1;
   optional string b = 2;

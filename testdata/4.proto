@@ -1,5 +1,7 @@
 // Group.
 
+syntax = "proto2";
+
 message A {
   optional group B = 1 {
     required string x = 2;

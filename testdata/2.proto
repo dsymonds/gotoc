@@ -1,5 +1,7 @@
 // Nested message, plus some message references.
 
+syntax = "proto2";
+
 message A {
   message B {
   }

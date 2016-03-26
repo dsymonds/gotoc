@@ -5,6 +5,7 @@ cd $(dirname $0)
 MAX=100
 GOTOC=../gotoc
 PROTOCMP=./protocmp
+PROTOBUF=$HOME/src/protobuf
 
 go build -o protocmp protocmp.go
 
@@ -17,6 +18,14 @@ for ((i=1; $i <= $MAX; i=$((i+1)))); do
   $GOTOC --descriptor_only $i.proto > $i.actual
   $PROTOCMP $i.expected $i.actual || {
     echo "==> FAILED" 1>&2
+    failures=$(($failures + 1))
+  }
+
+  protoc --descriptor_set_out=_baseline.raw $i.proto
+  protoc --decode=google.protobuf.FileDescriptorSet -I $PROTOBUF $PROTOBUF/src/google/protobuf/descriptor.proto \
+    < _baseline.raw > $i.baseline
+  $PROTOCMP $i.expected $i.baseline || {
+    echo "==> BASELINE MISMATCH" 1>&2
     failures=$(($failures + 1))
   }
 done

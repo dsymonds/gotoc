@@ -1,7 +1,5 @@
-*.6
 .*.swp
 .DS_Store
-6.out
 _testmain.go
 gotoc
 testdata/*.actual

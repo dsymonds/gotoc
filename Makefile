@@ -8,6 +8,7 @@ minidiff:
 	mv testdata/mini.pb.go testdata/mini-gotoc.pb.go
 	protoc --go_out=. testdata/mini.proto
 	mv testdata/mini.pb.go testdata/mini-protoc.pb.go
+	sed -i '' '/^var fileDescriptor/,/^}$$/d' testdata/mini-{gotoc,protoc}.pb.go
 	diff -ud testdata/mini-{gotoc,protoc}.pb.go || true
 
 regtest:
