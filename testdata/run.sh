@@ -17,7 +17,7 @@ for ((i=1; $i <= $MAX; i=$((i+1)))); do
 
   $GOTOC --descriptor_only $i.proto > $i.actual
   $PROTOCMP $i.expected $i.actual || {
-    echo "==> FAILED" 1>&2
+    echo "==> FAILED expected vs. actual" 1>&2
     failures=$(($failures + 1))
   }
 

@@ -76,8 +76,7 @@ func main() {
 	// Prepare request.
 	cgRequest := &plugin.CodeGeneratorRequest{
 		FileToGenerate: flag.Args(),
-		// TODO: proto_file should be topologically sorted (bottom-up)
-		ProtoFile: fds.File,
+		ProtoFile:      fds.File,
 	}
 	buf, err := proto.Marshal(cgRequest)
 	if err != nil {

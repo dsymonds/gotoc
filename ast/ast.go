@@ -17,7 +17,43 @@ type Node interface {
 
 // FileSet describes a set of proto files.
 type FileSet struct {
+	// Files is sorted in topological order, bottom up.
+	// That means that a file X will only import a file Y
+	// if Y occurs in this slice before X.
 	Files []*File
+}
+
+// Sort sorts fs.Files topologically.
+func (fs *FileSet) Sort() {
+	in := fs.Files                   // old version of fs.Files; shrinks each loop
+	out := make([]*File, 0, len(in)) // new version of fs.Files; grows each loop
+	done := make(map[string]bool)    // filenames that we've seen and that don't have un-done imports
+	for len(in) > 0 {
+		// Find a file that doesn't have an un-done import.
+		var next *File
+		for i, f := range in {
+			ok := true
+			for _, imp := range f.Imports {
+				if !done[imp] {
+					ok = false
+					break
+				}
+			}
+			if !ok {
+				continue
+			}
+			next = f
+			copy(in[i:], in[i+1:])
+			in = in[:len(in)-1]
+			break
+		}
+		if next == nil {
+			panic("import loop!") // shouldn't happen
+		}
+		out = append(out, next)
+		done[next.Name] = true
+	}
+	fs.Files = out
 }
 
 // File represents a single proto file.

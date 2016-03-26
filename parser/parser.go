@@ -86,6 +86,7 @@ func ParseFiles(filenames []string, importPaths []string) (*ast.FileSet, error) 
 	if err := resolveSymbols(fset); err != nil {
 		return nil, err
 	}
+	fset.Sort()
 	return fset, nil
 }
 
