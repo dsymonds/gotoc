@@ -279,6 +279,12 @@ func genMethod(mth *ast.Method) (*pb.MethodDescriptorProto, error) {
 		InputType:  proto.String(qualifiedName(mth.InType)),
 		OutputType: proto.String(qualifiedName(mth.OutType)),
 	}
+	if mth.ClientStreaming {
+		mdp.ClientStreaming = proto.Bool(true)
+	}
+	if mth.ServerStreaming {
+		mdp.ServerStreaming = proto.Bool(true)
+	}
 	return mdp, nil
 }
 

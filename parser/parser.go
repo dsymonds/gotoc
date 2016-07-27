@@ -787,6 +787,19 @@ func (p *parser) readService(srv *ast.Service) *parseError {
 			return tok.err
 		}
 		mth.InTypeName = tok.value // TODO: validate
+		if tok.value == "stream" {
+			// If the next token isn't ")", this is a stream.
+			tok = p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			if tok.value != ")" {
+				mth.InTypeName = tok.value
+				mth.ClientStreaming = true
+			} else {
+				p.back()
+			}
+		}
 		if err := p.readToken(")"); err != nil {
 			return err
 		}
@@ -802,6 +815,19 @@ func (p *parser) readService(srv *ast.Service) *parseError {
 		}
 		mth.OutTypeName = tok.value // TODO: validate
 
+		if tok.value == "stream" {
+			// If the next token isn't ")", this is a stream.
+			tok = p.next()
+			if tok.err != nil {
+				return tok.err
+			}
+			if tok.value != ")" {
+				mth.OutTypeName = tok.value
+				mth.ServerStreaming = true
+			} else {
+				p.back()
+			}
+		}
 		if err := p.readToken(")"); err != nil {
 			return err
 		}
