@@ -252,7 +252,9 @@ type Method struct {
 	InTypeName, OutTypeName string
 	InType, OutType         interface{}
 
-	// TODO: support streaming methods
+	// ClientStreaming and ServerStreaming indicate whether the argument and
+	// return value to the rpc are streams.
+	ClientStreaming, ServerStreaming bool
 
 	Up *Service
 }

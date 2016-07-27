@@ -335,6 +335,18 @@ var parseTests = []parseTest{
 			`message_type:{name:"In"} message_type:{name:"Out"}`,
 	},
 	{
+		"SimpleServiceWithMessageCalledStream",
+		"service TestService {\n  rpc Foo(stream) returns (stream);\n}\n message stream {}",
+		`service { name: "TestService" method { name:"Foo" input_type:".stream" output_type:".stream" } }` +
+			`message_type:{name:"stream"}`,
+	},
+	{
+		"StreamingService",
+		"service TestService {\n  rpc Foo(stream In) returns (stream Out);\n}\n message In{} message Out{}",
+		`service { name: "TestService" method { name:"Foo" input_type:".In" output_type:".Out" client_streaming: true server_streaming: true } }` +
+			`message_type:{name:"In"} message_type:{name:"Out"}`,
+	},
+	{
 		"ParseImport",
 		"import \"foo/bar/baz.proto\";\n",
 		`dependency: "foo/bar/baz.proto"`,
