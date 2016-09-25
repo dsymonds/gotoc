@@ -30,6 +30,7 @@ var (
 	importPath     = flag.String("import_path", ".", "Comma-separated list of paths to search for imports.")
 	pluginBinary   = flag.String("plugin", "protoc-gen-go", "The code generator plugin to use.")
 	descriptorOnly = flag.Bool("descriptor_only", false, "Whether to print out only the FileDescriptorSet.")
+	params         = flag.String("params", "", "Parameters to pass to the code generator plugin (plugin-specific format).")
 )
 
 func fullPath(binary string, paths []string) string {
@@ -77,6 +78,9 @@ func main() {
 	cgRequest := &plugin.CodeGeneratorRequest{
 		FileToGenerate: flag.Args(),
 		ProtoFile:      fds.File,
+	}
+	if *params != "" {
+		cgRequest.Parameter = params
 	}
 	buf, err := proto.Marshal(cgRequest)
 	if err != nil {
