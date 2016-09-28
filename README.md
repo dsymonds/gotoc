@@ -12,6 +12,11 @@ go get github.com/golang/protobuf/protoc-gen-go
 gotoc foo.proto
 ```
 
+To enable [gRPC](http://www.grpc.io/) output, use the `-params` flag:
+```shell
+gotoc -params plugins=grpc foo.proto
+```
+
 License
 -------
 This is licensed under the [BSD 3-Clause Licence](http://opensource.org/licenses/BSD-3-Clause).
